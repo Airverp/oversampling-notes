@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getAllModules, getPapersByModule } from '../../lib/papers';
+import { buildModuleComparisonRows, getAllModules } from '../../lib/papers';
 
 export function getStaticPaths() {
   return getAllModules().map((module) => ({
@@ -10,7 +10,7 @@ export function getStaticPaths() {
 }
 
 const { module } = Astro.props;
-const papers = getPapersByModule(module.key);
+const rows = buildModuleComparisonRows(module.key);
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -25,32 +25,62 @@ const base = import.meta.env.BASE_URL;
 
     <article class="detail-block stack">
       <div>
-        <h2>这个模块下的论文</h2>
-        <p class="muted">你可以在这里快速比较不同论文在同一模块上的改法。</p>
+        <h2>同模块改法对比</h2>
+        <p class="muted">先横向看这一类创新，再回到具体论文页看完整上下文。</p>
+      </div>
+
+      <div class="table-wrap comparison-table detail-block-inner">
+        <table>
+          <thead>
+            <tr>
+              <th>论文</th>
+              <th>年份</th>
+              <th>核心创新</th>
+              <th>该模块改动</th>
+              <th>详细说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ paper, module: currentModule }) => (
+              <tr>
+                <td>
+                  <a href={`${base}papers/${paper.id}`}>{paper.title}</a>
+                  <div class="muted">{paper.authors}</div>
+                </td>
+                <td>{paper.year}</td>
+                <td>{paper.innovationSummary}</td>
+                <td>{currentModule?.changeSummary}</td>
+                <td>{currentModule?.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="detail-block stack">
+      <div>
+        <h2>逐篇查看</h2>
+        <p class="muted">如果你想看完整上下文，可以继续点进每篇论文。</p>
       </div>
       <div class="stack">
-        {papers.map((paper) => {
-          const currentModule = paper.modules.find((item) => item.key === module.key);
-          return (
-            <article class="card stack">
-              <div>
-                <div class="badges">
-                  <span class="badge">{paper.year}</span>
-                </div>
-                <h3 style="margin-top: 0.8rem;"><a href={`${base}papers/${paper.id}`}>{paper.title}</a></h3>
-                <p class="muted">{paper.authors}</p>
+        {rows.map(({ paper, module: currentModule }) => (
+          <article class="card stack">
+            <div>
+              <div class="badges">
+                <span class="badge">{paper.year}</span>
+                <span class="badge">{paper.venue}</span>
               </div>
-              <p><strong>一句话创新：</strong>{paper.innovationSummary}</p>
-              {currentModule && (
-                <>
-                  <p><strong>该模块改动：</strong>{currentModule.changeSummary}</p>
-                  <p><strong>详细说明：</strong>{currentModule.detail}</p>
-                </>
-              )}
-            </article>
-          );
-        })}
+              <h3 style="margin-top: 0.8rem;"><a href={`${base}papers/${paper.id}`}>{paper.title}</a></h3>
+              <p class="muted">{paper.authors}</p>
+            </div>
+            <p><strong>一句话创新：</strong>{paper.innovationSummary}</p>
+            <p><strong>该模块改动：</strong>{currentModule?.changeSummary}</p>
+            <p><strong>详细说明：</strong>{currentModule?.detail}</p>
+          </article>
+        ))}
       </div>
     </article>
   </section>
 </Layout>
+

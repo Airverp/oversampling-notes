@@ -26,19 +26,39 @@ const base = import.meta.env.BASE_URL;
         <h1 class="page-title">{paper.title}</h1>
         <p class="page-lead">{paper.authors}</p>
       </div>
-      <div class="callout">核心创新：{paper.innovationSummary}</div>
+      <div class="summary-grid emphasis-grid">
+        <div class="summary-cell">
+          <strong>研究问题</strong>
+          <p>{paper.problem}</p>
+        </div>
+        <div class="summary-cell">
+          <strong>改进基线</strong>
+          <p>{paper.baseline}</p>
+        </div>
+        <div class="summary-cell">
+          <strong>核心创新</strong>
+          <p>{paper.innovationSummary}</p>
+        </div>
+        <div class="summary-cell">
+          <strong>适用场景</strong>
+          <p>{paper.applicability}</p>
+        </div>
+      </div>
     </div>
 
     <div class="grid cols-2">
-      <article class="detail-block">
-        <h2>基础信息</h2>
+      <article class="detail-block stack">
+        <h2>快速判断</h2>
         <dl class="meta-list">
-          <div class="meta-row"><dt>研究问题</dt><dd>{paper.problem}</dd></div>
-          <div class="meta-row"><dt>改进基线</dt><dd>{paper.baseline}</dd></div>
-          <div class="meta-row"><dt>适用场景</dt><dd>{paper.applicability}</dd></div>
           <div class="meta-row"><dt>局限</dt><dd>{paper.limitations}</dd></div>
           <div class="meta-row"><dt>引用标记</dt><dd>{paper.citation}</dd></div>
+          <div class="meta-row"><dt>涉及模块</dt><dd>{moduleHighlights.map((module) => module.moduleName).join('、')}</dd></div>
         </dl>
+        {paper.links.paper && (
+          <div class="actions">
+            <a class="button" href={paper.links.paper} target="_blank" rel="noreferrer">打开论文原文</a>
+          </div>
+        )}
       </article>
 
       <article class="detail-block stack">
@@ -55,18 +75,19 @@ const base = import.meta.env.BASE_URL;
         <p class="muted">这篇论文的创新分别落在哪些模块上。</p>
       </div>
       <div class="grid cols-2">
-        {moduleHighlights.map((module) => (
-          <article class="card stack">
+        {moduleHighlights.map((module, index) => (
+          <article class="card stack numbered-card">
+            <div class="number-badge">0{index + 1}</div>
             <div>
               <h3><a href={`${base}modules/${module.definition.slug}`}>{module.moduleName}</a></h3>
               <p class="muted">{module.definition.shortDescription}</p>
             </div>
             <div>
-              <strong>创新点：</strong>
+              <strong>创新点</strong>
               <p>{module.changeSummary}</p>
             </div>
             <div>
-              <strong>详细说明：</strong>
+              <strong>详细说明</strong>
               <p>{module.detail}</p>
             </div>
           </article>
@@ -75,3 +96,4 @@ const base = import.meta.env.BASE_URL;
     </article>
   </section>
 </Layout>
+

@@ -1,9 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getAllModules, getFeaturedPapers } from '../lib/papers';
+import { getAllModules, getFeaturedPapers, getRecentPapers, getSiteStats } from '../lib/papers';
 
 const modules = getAllModules();
 const featured = getFeaturedPapers(4);
+const recent = getRecentPapers(3);
+const stats = getSiteStats();
 const base = import.meta.env.BASE_URL;
 ---
 
@@ -12,28 +14,69 @@ const base = import.meta.env.BASE_URL;
     <span class="badge">学术知识库 · 表格型不平衡数据 · 过采样方法</span>
     <h1>把你看过的过采样论文，整理成一个能长期积累的方法地图。</h1>
     <p class="page-lead">
-      这个网站不是简单存论文标题，而是把每篇论文拆成固定模块：邻域 / 距离定义、样本选择、生成空间、生成机制、质量控制、任务耦合。
-      这样你以后新增论文时，只需要往固定框架里填写内容，就能持续形成自己的研究脉络。
+      这个网站的重点不是存题目，而是把每篇论文拆成固定模块，并且支持按论文、按模块、按创新位置去回看。
+      以后你新增论文时，只需要继续往同一套框架里填内容，就能慢慢形成自己的方法谱系。
     </p>
     <div class="actions">
-      <a class="button" href={`${base}papers`}>从论文列表开始</a>
-      <a class="button secondary" href={`${base}modules`}>按改动模块浏览</a>
-      <a class="button secondary" href={`${base}guide`}>查看如何新增内容</a>
+      <a class="button" href={`${base}papers`}>进入论文知识库</a>
+      <a class="button secondary" href={`${base}modules`}>按模块比较方法</a>
+      <a class="button secondary" href={`${base}guide`}>查看维护说明</a>
     </div>
   </section>
 
   <section class="grid cols-3" style="margin-top: 1.5rem;">
-    <article class="card">
-      <h2>你的网站目标</h2>
-      <p>按论文记录方法，用统一框架总结创新点，并能快速回看同一模块下的方法差异。</p>
+    <article class="card stat-card">
+      <span class="stat-label">已录入论文</span>
+      <strong class="stat-value">{stats.paperCount}</strong>
+      <p class="muted">持续扩展你的过采样方法库。</p>
     </article>
-    <article class="card">
-      <h2>推荐使用方式</h2>
-      <p>每读完一篇论文，先写一句话创新总结，再补充涉及到的模块拆解。</p>
+    <article class="card stat-card">
+      <span class="stat-label">主模块</span>
+      <strong class="stat-value">{stats.moduleCount}</strong>
+      <p class="muted">统一框架整理创新点，避免越记越乱。</p>
     </article>
-    <article class="card">
-      <h2>第一版重点</h2>
-      <p>论文列表、模块索引、论文详情、模块详情，以及后续可自己维护的录入方式。</p>
+    <article class="card stat-card">
+      <span class="stat-label">关键词</span>
+      <strong class="stat-value">{stats.keywordCount}</strong>
+      <p class="muted">帮助你从方法主题快速回看文献。</p>
+    </article>
+  </section>
+
+  <section style="margin-top: 2rem;" class="grid cols-2 knowledge-split">
+    <article class="detail-block stack">
+      <div>
+        <h2 class="section-title">推荐起点</h2>
+        <p class="page-lead">如果你是为了回顾思路，建议先从论文入口和模块入口开始。</p>
+      </div>
+      <div class="stack compact-list">
+        <a class="link-card" href={`${base}papers`}>
+          <strong>论文列表</strong>
+          <span>快速扫读每篇论文的核心创新与改动模块。</span>
+        </a>
+        <a class="link-card" href={`${base}modules`}>
+          <strong>模块索引</strong>
+          <span>横向比较“同一类创新”在不同论文里的实现方式。</span>
+        </a>
+        <a class="link-card" href={`${base}guide`}>
+          <strong>维护说明</strong>
+          <span>以后新增论文时，直接照模板填就行。</span>
+        </a>
+      </div>
+    </article>
+
+    <article class="detail-block stack">
+      <div>
+        <h2 class="section-title">最近录入</h2>
+        <p class="page-lead">这里展示当前最值得优先回看的几篇论文。</p>
+      </div>
+      <div class="stack compact-list">
+        {recent.map((paper) => (
+          <a class="link-card" href={`${base}papers/${paper.id}`}>
+            <strong>{paper.title}</strong>
+            <span>{paper.year} · {paper.innovationSummary}</span>
+          </a>
+        ))}
+      </div>
     </article>
   </section>
 
@@ -56,7 +99,7 @@ const base = import.meta.env.BASE_URL;
   <section style="margin-top: 2rem;" class="stack">
     <div>
       <h2 class="section-title">代表性论文</h2>
-      <p class="page-lead">先放几篇示例，后面你只需要继续往数据里加即可。</p>
+      <p class="page-lead">先看这些示例，你会更快进入这套整理方式。</p>
     </div>
     <div class="grid cols-2">
       {featured.map((paper) => (
@@ -64,7 +107,8 @@ const base = import.meta.env.BASE_URL;
           <div>
             <div class="badges">
               <span class="badge">{paper.year}</span>
-              {paper.keywords.slice(0, 3).map((keyword) => <span class="tag">{keyword}</span>)}
+              <span class="badge">{paper.venue}</span>
+              {paper.keywords.slice(0, 2).map((keyword) => <span class="tag">{keyword}</span>)}
             </div>
             <h3 style="margin-top: 0.9rem;"><a href={`${base}papers/${paper.id}`}>{paper.title}</a></h3>
             <p class="muted">{paper.authors}</p>

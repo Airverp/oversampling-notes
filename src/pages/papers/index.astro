@@ -1,63 +1,167 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getAllKeywords, getAllPapers, getAllYears, getModuleByKey } from '../../lib/papers';
+import { getAllKeywords, getAllModules, getAllPapers, getAllYears, getModuleByKey, getSiteStats } from '../../lib/papers';
 
 const papers = getAllPapers();
 const years = getAllYears();
 const keywords = getAllKeywords();
+const modules = getAllModules();
+const stats = getSiteStats();
 const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="论文列表" description="按论文查看过采样方法与创新点。">
   <section class="stack">
     <div>
-      <h1 class="page-title">论文列表</h1>
-      <p class="page-lead">这里按“每篇论文一条记录”的方式整理。重点不是长摘要，而是快速看到它改了哪个模块、核心创新是什么。</p>
+      <h1 class="page-title">论文知识库</h1>
+      <p class="page-lead">这里不只是论文清单，而是你的方法入口页。你可以按年份、模块、关键词筛选，然后快速定位某篇论文改了哪里、为什么值得记。</p>
     </div>
+
+    <section class="grid cols-3">
+      <article class="card stat-card">
+        <span class="stat-label">论文总数</span>
+        <strong class="stat-value">{stats.paperCount}</strong>
+      </article>
+      <article class="card stat-card">
+        <span class="stat-label">模块总数</span>
+        <strong class="stat-value">{stats.moduleCount}</strong>
+      </article>
+      <article class="card stat-card">
+        <span class="stat-label">关键词总数</span>
+        <strong class="stat-value">{stats.keywordCount}</strong>
+      </article>
+    </section>
 
     <article class="panel stack">
       <div>
-        <h2 style="margin-bottom: 0.4rem;">浏览提示</h2>
-        <p class="muted">第一版先提供清晰的静态索引：你可以先按年份、关键词和模块快速扫描，再点进具体论文看详细拆解。</p>
+        <h2 style="margin-bottom: 0.4rem;">筛选浏览</h2>
+        <p class="muted">点击任意标签后，下面的论文卡片会自动过滤。</p>
       </div>
-      <div class="filter-list">
-        {years.map((year) => <span class="filter-chip">年份：{year}</span>)}
+
+      <div class="filter-group">
+        <strong>年份</strong>
+        <div class="filter-list" data-filter-group="year">
+          <button class="filter-chip is-active" type="button" data-filter-type="year" data-filter-value="all">全部</button>
+          {years.map((year) => <button class="filter-chip" type="button" data-filter-type="year" data-filter-value={String(year)}>{year}</button>)}
+        </div>
       </div>
-      <div class="filter-list">
-        {keywords.map((keyword) => <span class="filter-chip">{keyword}</span>)}
+
+      <div class="filter-group">
+        <strong>模块</strong>
+        <div class="filter-list" data-filter-group="module">
+          <button class="filter-chip is-active" type="button" data-filter-type="module" data-filter-value="all">全部</button>
+          {modules.map((module) => <button class="filter-chip" type="button" data-filter-type="module" data-filter-value={module.key}>{module.name}</button>)}
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <strong>关键词</strong>
+        <div class="filter-list" data-filter-group="keyword">
+          <button class="filter-chip is-active" type="button" data-filter-type="keyword" data-filter-value="all">全部</button>
+          {keywords.map((keyword) => <button class="filter-chip" type="button" data-filter-type="keyword" data-filter-value={keyword}>{keyword}</button>)}
+        </div>
       </div>
     </article>
 
-    <div class="table-wrap panel">
-      <table>
-        <thead>
-          <tr>
-            <th>论文</th>
-            <th>年份</th>
-            <th>核心创新一句话</th>
-            <th>改动模块</th>
-          </tr>
-        </thead>
-        <tbody>
-          {papers.map((paper) => (
-            <tr>
-              <td>
-                <a href={`${base}papers/${paper.id}`}>{paper.title}</a>
-                <div class="muted">{paper.authors}</div>
-              </td>
-              <td>{paper.year}</td>
-              <td>{paper.innovationSummary}</td>
-              <td>
-                <div class="tag-list">
-                  {paper.modules.map((module) => (
-                    <a class="tag" href={`${base}modules/${getModuleByKey(module.key)?.slug}`}>{module.moduleName}</a>
-                  ))}
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div class="results-bar">
+      <strong>筛选结果</strong>
+      <span id="paper-results-count">共 {papers.length} 篇</span>
     </div>
+
+    <section class="grid cols-2" id="paper-card-list">
+      {papers.map((paper) => (
+        <article
+          class="paper-card stack filterable-paper"
+          data-year={paper.year}
+          data-keywords={paper.keywords.join('|')}
+          data-modules={paper.modules.map((module) => module.key).join('|')}
+        >
+          <div>
+            <div class="badges">
+              <span class="badge">{paper.year}</span>
+              <span class="badge">{paper.venue}</span>
+            </div>
+            <h2 style="margin-top: 0.9rem;"><a href={`${base}papers/${paper.id}`}>{paper.title}</a></h2>
+            <p class="muted">{paper.authors}</p>
+          </div>
+
+          <div class="summary-block">
+            <strong>核心创新</strong>
+            <p>{paper.innovationSummary}</p>
+          </div>
+
+          <div class="summary-grid">
+            <div>
+              <strong>改进基线</strong>
+              <p>{paper.baseline}</p>
+            </div>
+            <div>
+              <strong>适用场景</strong>
+              <p>{paper.applicability}</p>
+            </div>
+          </div>
+
+          <div class="tag-list">
+            {paper.modules.map((module) => (
+              <a class="tag" href={`${base}modules/${getModuleByKey(module.key)?.slug}`}>{module.moduleName}</a>
+            ))}
+          </div>
+        </article>
+      ))}
+    </section>
   </section>
+
+  <script>
+    const activeFilters = {
+      year: 'all',
+      module: 'all',
+      keyword: 'all',
+    };
+
+    const buttons = Array.from(document.querySelectorAll('[data-filter-type]'));
+    const cards = Array.from(document.querySelectorAll('.filterable-paper'));
+    const countNode = document.querySelector('#paper-results-count');
+
+    const applyFilters = () => {
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const year = card.getAttribute('data-year') || '';
+        const modules = (card.getAttribute('data-modules') || '').split('|').filter(Boolean);
+        const keywords = (card.getAttribute('data-keywords') || '').split('|').filter(Boolean);
+
+        const matchesYear = activeFilters.year === 'all' || year === activeFilters.year;
+        const matchesModule = activeFilters.module === 'all' || modules.includes(activeFilters.module);
+        const matchesKeyword = activeFilters.keyword === 'all' || keywords.includes(activeFilters.keyword);
+
+        const isVisible = matchesYear && matchesModule && matchesKeyword;
+        card.style.display = isVisible ? '' : 'none';
+
+        if (isVisible) {
+          visibleCount += 1;
+        }
+      });
+
+      if (countNode) {
+        countNode.textContent = `共 ${visibleCount} 篇`;
+      }
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const type = button.getAttribute('data-filter-type');
+        const value = button.getAttribute('data-filter-value');
+        if (!type || !value) return;
+
+        activeFilters[type] = value;
+
+        document
+          .querySelectorAll(`[data-filter-type="${type}"]`)
+          .forEach((item) => item.classList.remove('is-active'));
+
+        button.classList.add('is-active');
+        applyFilters();
+      });
+    });
+  </script>
 </Layout>

@@ -46,3 +46,26 @@ export function buildModuleHighlights(paper: PaperEntry) {
     definition: getModuleByKey(module.key) as ModuleDefinition,
   }));
 }
+
+export function getSiteStats() {
+  return {
+    paperCount: papers.length,
+    moduleCount: moduleDefinitions.length,
+    keywordCount: getAllKeywords().length,
+  };
+}
+
+export function getRecentPapers(limit = 3) {
+  return getAllPapers().slice(0, limit);
+}
+
+export function buildModuleComparisonRows(key: ModuleKey) {
+  return getPapersByModule(key).map((paper) => {
+    const currentModule = paper.modules.find((module) => module.key === key);
+
+    return {
+      paper,
+      module: currentModule,
+    };
+  });
+}
