@@ -1,0 +1,74 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="维护说明" description="如何向站点里添加新论文内容。">
+  <section class="stack">
+    <div>
+      <h1 class="page-title">如何向网站添加新内容</h1>
+      <p class="page-lead">你以后基本只需要修改一个文件：<strong>src/data/papers.ts</strong>。每新增一篇论文，就在里面复制一条模板并填写内容。</p>
+    </div>
+
+    <article class="detail-block stack">
+      <h2>第一步：复制一条论文模板</h2>
+      <p>打开 <code>site/src/data/papers.ts</code>，在 <code>papers</code> 数组里复制一条已有论文，改成你的新论文内容。</p>
+      <div class="callout">最重要的字段只有：id、title、year、innovationSummary、modules。其他字段可以后补。</div>
+    </article>
+
+    <article class="detail-block stack">
+      <h2>第二步：填写模块拆解</h2>
+      <p>每篇论文最核心的是 <code>modules</code>。你只需要记录它到底改了哪些模块，每个模块写两句：</p>
+      <ul>
+        <li><strong>changeSummary</strong>：一句很短的话，说它改了什么。</li>
+        <li><strong>detail</strong>：再补一句原因、作用或你的理解。</li>
+      </ul>
+      <p>如果某篇论文没有涉及某个模块，就不要写进去。</p>
+    </article>
+
+    <article class="detail-block stack">
+      <h2>第三步：本地预览</h2>
+      <div class="panel">
+        <p>在 <code>site</code> 目录里运行：</p>
+        <pre><code>npm run dev</code></pre>
+        <p>然后打开终端显示的网址，就可以看到更新后的页面。</p>
+      </div>
+    </article>
+
+    <article class="detail-block stack">
+      <h2>第四步：构建与发布</h2>
+      <div class="panel">
+        <p>本地构建命令：</p>
+        <pre><code>npm run build</code></pre>
+        <p>后续我还会把 GitHub Pages 发布流程一并配好，这样你只要提交更新就能上线。</p>
+      </div>
+    </article>
+
+    <article class="detail-block stack">
+      <h2>推荐填写模板</h2>
+      <pre><code>{`{
+  id: 'paper-id',
+  title: '论文标题',
+  year: 2024,
+  authors: '作者',
+  venue: '期刊/会议',
+  keywords: ['tabular', 'oversampling'],
+  problem: '这篇论文要解决什么问题',
+  baseline: '它主要基于谁改进',
+  innovationSummary: '一句话概括创新点',
+  detailedNotes: ['你的理解1', '你的理解2'],
+  applicability: '适用场景',
+  limitations: '可能缺点',
+  citation: '引用格式缩写',
+  links: {},
+  modules: [
+    {
+      key: 'distance',
+      moduleName: '邻域 / 距离定义',
+      changeSummary: '一句话说明改动',
+      detail: '再补一句解释',
+    },
+  ],
+}`}</code></pre>
+    </article>
+  </section>
+</Layout>

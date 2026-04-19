@@ -1,0 +1,55 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getAllModules, getPapersByModule } from '../../lib/papers';
+
+export function getStaticPaths() {
+  return getAllModules().map((module) => ({
+    params: { slug: module.slug },
+    props: { module },
+  }));
+}
+
+const { module } = Astro.props;
+const papers = getPapersByModule(module.key);
+---
+
+<Layout title={module.name} description={module.shortDescription}>
+  <section class="stack">
+    <div class="hero stack">
+      <span class="badge">模块视角</span>
+      <h1 class="page-title">{module.name}</h1>
+      <p class="page-lead">{module.shortDescription}</p>
+      <div class="callout">判断问题：{module.guidingQuestion}</div>
+    </div>
+
+    <article class="detail-block stack">
+      <div>
+        <h2>这个模块下的论文</h2>
+        <p class="muted">你可以在这里快速比较不同论文在同一模块上的改法。</p>
+      </div>
+      <div class="stack">
+        {papers.map((paper) => {
+          const currentModule = paper.modules.find((item) => item.key === module.key);
+          return (
+            <article class="card stack">
+              <div>
+                <div class="badges">
+                  <span class="badge">{paper.year}</span>
+                </div>
+                <h3 style="margin-top: 0.8rem;"><a href={`/papers/${paper.id}`}>{paper.title}</a></h3>
+                <p class="muted">{paper.authors}</p>
+              </div>
+              <p><strong>一句话创新：</strong>{paper.innovationSummary}</p>
+              {currentModule && (
+                <>
+                  <p><strong>该模块改动：</strong>{currentModule.changeSummary}</p>
+                  <p><strong>详细说明：</strong>{currentModule.detail}</p>
+                </>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </article>
+  </section>
+</Layout>

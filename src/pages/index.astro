@@ -1,11 +1,76 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import { getAllModules, getFeaturedPapers } from '../lib/papers';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const modules = getAllModules();
+const featured = getFeaturedPapers(4);
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="首页" description="不平衡表格数据过采样论文与创新点整理站点。">
+  <section class="hero stack">
+    <span class="badge">学术知识库 · 表格型不平衡数据 · 过采样方法</span>
+    <h1>把你看过的过采样论文，整理成一个能长期积累的方法地图。</h1>
+    <p class="page-lead">
+      这个网站不是简单存论文标题，而是把每篇论文拆成固定模块：邻域 / 距离定义、样本选择、生成空间、生成机制、质量控制、任务耦合。
+      这样你以后新增论文时，只需要往固定框架里填写内容，就能持续形成自己的研究脉络。
+    </p>
+    <div class="actions">
+      <a class="button" href="/papers">从论文列表开始</a>
+      <a class="button secondary" href="/modules">按改动模块浏览</a>
+      <a class="button secondary" href="/guide">查看如何新增内容</a>
+    </div>
+  </section>
+
+  <section class="grid cols-3" style="margin-top: 1.5rem;">
+    <article class="card">
+      <h2>你的网站目标</h2>
+      <p>按论文记录方法，用统一框架总结创新点，并能快速回看同一模块下的方法差异。</p>
+    </article>
+    <article class="card">
+      <h2>推荐使用方式</h2>
+      <p>每读完一篇论文，先写一句话创新总结，再补充涉及到的模块拆解。</p>
+    </article>
+    <article class="card">
+      <h2>第一版重点</h2>
+      <p>论文列表、模块索引、论文详情、模块详情，以及后续可自己维护的录入方式。</p>
+    </article>
+  </section>
+
+  <section style="margin-top: 2rem;" class="stack">
+    <div>
+      <h2 class="section-title">六个主模块</h2>
+      <p class="page-lead">这六个模块是你整理过采样方法时的固定骨架。</p>
+    </div>
+    <div class="grid cols-3">
+      {modules.map((module) => (
+        <article class="module-card">
+          <h3><a href={`/modules/${module.slug}`}>{module.name}</a></h3>
+          <p>{module.shortDescription}</p>
+          <p class="muted">判断问题：{module.guidingQuestion}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section style="margin-top: 2rem;" class="stack">
+    <div>
+      <h2 class="section-title">代表性论文</h2>
+      <p class="page-lead">先放几篇示例，后面你只需要继续往数据里加即可。</p>
+    </div>
+    <div class="grid cols-2">
+      {featured.map((paper) => (
+        <article class="paper-card stack">
+          <div>
+            <div class="badges">
+              <span class="badge">{paper.year}</span>
+              {paper.keywords.slice(0, 3).map((keyword) => <span class="tag">{keyword}</span>)}
+            </div>
+            <h3 style="margin-top: 0.9rem;"><a href={`/papers/${paper.id}`}>{paper.title}</a></h3>
+            <p class="muted">{paper.authors}</p>
+          </div>
+          <p>{paper.innovationSummary}</p>
+        </article>
+      ))}
+    </div>
+  </section>
 </Layout>

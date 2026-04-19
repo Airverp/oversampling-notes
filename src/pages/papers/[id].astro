@@ -1,0 +1,76 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { buildModuleHighlights, getAllPapers } from '../../lib/papers';
+
+export function getStaticPaths() {
+  return getAllPapers().map((paper) => ({
+    params: { id: paper.id },
+    props: { paper },
+  }));
+}
+
+const { paper } = Astro.props;
+const moduleHighlights = buildModuleHighlights(paper);
+---
+
+<Layout title={paper.title} description={paper.innovationSummary}>
+  <section class="stack">
+    <div class="hero stack">
+      <div class="badges">
+        <span class="badge">{paper.year}</span>
+        <span class="badge">{paper.venue}</span>
+        {paper.keywords.map((keyword: string) => <span class="tag">{keyword}</span>)}
+      </div>
+      <div>
+        <h1 class="page-title">{paper.title}</h1>
+        <p class="page-lead">{paper.authors}</p>
+      </div>
+      <div class="callout">核心创新：{paper.innovationSummary}</div>
+    </div>
+
+    <div class="grid cols-2">
+      <article class="detail-block">
+        <h2>基础信息</h2>
+        <dl class="meta-list">
+          <div class="meta-row"><dt>研究问题</dt><dd>{paper.problem}</dd></div>
+          <div class="meta-row"><dt>改进基线</dt><dd>{paper.baseline}</dd></div>
+          <div class="meta-row"><dt>适用场景</dt><dd>{paper.applicability}</dd></div>
+          <div class="meta-row"><dt>局限</dt><dd>{paper.limitations}</dd></div>
+          <div class="meta-row"><dt>引用标记</dt><dd>{paper.citation}</dd></div>
+        </dl>
+      </article>
+
+      <article class="detail-block stack">
+        <h2>你的阅读备注</h2>
+        <ul class="timeline">
+          {paper.detailedNotes.map((note: string) => <li>{note}</li>)}
+        </ul>
+      </article>
+    </div>
+
+    <article class="detail-block stack">
+      <div>
+        <h2>模块拆解</h2>
+        <p class="muted">这篇论文的创新分别落在哪些模块上。</p>
+      </div>
+      <div class="grid cols-2">
+        {moduleHighlights.map((module) => (
+          <article class="card stack">
+            <div>
+              <h3><a href={`/modules/${module.definition.slug}`}>{module.moduleName}</a></h3>
+              <p class="muted">{module.definition.shortDescription}</p>
+            </div>
+            <div>
+              <strong>创新点：</strong>
+              <p>{module.changeSummary}</p>
+            </div>
+            <div>
+              <strong>详细说明：</strong>
+              <p>{module.detail}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </article>
+  </section>
+</Layout>

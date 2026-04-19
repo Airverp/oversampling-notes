@@ -1,0 +1,62 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getAllKeywords, getAllPapers, getAllYears, getModuleByKey } from '../../lib/papers';
+
+const papers = getAllPapers();
+const years = getAllYears();
+const keywords = getAllKeywords();
+---
+
+<Layout title="论文列表" description="按论文查看过采样方法与创新点。">
+  <section class="stack">
+    <div>
+      <h1 class="page-title">论文列表</h1>
+      <p class="page-lead">这里按“每篇论文一条记录”的方式整理。重点不是长摘要，而是快速看到它改了哪个模块、核心创新是什么。</p>
+    </div>
+
+    <article class="panel stack">
+      <div>
+        <h2 style="margin-bottom: 0.4rem;">浏览提示</h2>
+        <p class="muted">第一版先提供清晰的静态索引：你可以先按年份、关键词和模块快速扫描，再点进具体论文看详细拆解。</p>
+      </div>
+      <div class="filter-list">
+        {years.map((year) => <span class="filter-chip">年份：{year}</span>)}
+      </div>
+      <div class="filter-list">
+        {keywords.map((keyword) => <span class="filter-chip">{keyword}</span>)}
+      </div>
+    </article>
+
+    <div class="table-wrap panel">
+      <table>
+        <thead>
+          <tr>
+            <th>论文</th>
+            <th>年份</th>
+            <th>核心创新一句话</th>
+            <th>改动模块</th>
+          </tr>
+        </thead>
+        <tbody>
+          {papers.map((paper) => (
+            <tr>
+              <td>
+                <a href={`/papers/${paper.id}`}>{paper.title}</a>
+                <div class="muted">{paper.authors}</div>
+              </td>
+              <td>{paper.year}</td>
+              <td>{paper.innovationSummary}</td>
+              <td>
+                <div class="tag-list">
+                  {paper.modules.map((module) => (
+                    <a class="tag" href={`/modules/${getModuleByKey(module.key)?.slug}`}>{module.moduleName}</a>
+                  ))}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,30 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getAllModules, countPapersByModule } from '../../lib/papers';
+
+const modules = getAllModules();
+---
+
+<Layout title="模块索引" description="按改动模块查看过采样方法创新。">
+  <section class="stack">
+    <div>
+      <h1 class="page-title">改动模块索引</h1>
+      <p class="page-lead">如果你想比较“同一类创新”而不是“同一篇论文”，就从这里进入。每个模块页都会汇总在该模块上做过改进的论文。</p>
+    </div>
+
+    <div class="grid cols-2">
+      {modules.map((module) => (
+        <article class="module-card stack">
+          <div>
+            <div class="badges">
+              <span class="badge">{countPapersByModule(module.key)} 篇记录</span>
+            </div>
+            <h2 style="margin-top: 0.9rem;"><a href={`/modules/${module.slug}`}>{module.name}</a></h2>
+            <p>{module.shortDescription}</p>
+          </div>
+          <div class="callout">判断问题：{module.guidingQuestion}</div>
+        </article>
+      ))}
+    </div>
+  </section>
+</Layout>
