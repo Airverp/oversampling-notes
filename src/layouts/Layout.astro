@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.ico`} />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={Astro.props.description ?? '用于整理不平衡数据过采样论文方法与创新点的学术知识库。'} />
     <title>{Astro.props.title ? `${Astro.props.title} · Oversampling Notes` : 'Oversampling Notes'}</title>
@@ -12,7 +12,7 @@
   <body>
     <header class="site-header">
       <div class="container header-inner">
-        <a href="/" class="brand">
+        <a href={import.meta.env.BASE_URL} class="brand">
           <span class="brand-mark">ON</span>
           <span>
             <strong>Oversampling Notes</strong>
@@ -20,9 +20,9 @@
           </span>
         </a>
         <nav class="site-nav">
-          <a href="/papers">论文</a>
-          <a href="/modules">模块</a>
-          <a href="/guide">维护说明</a>
+          <a href={`${import.meta.env.BASE_URL}papers`}>论文</a>
+          <a href={`${import.meta.env.BASE_URL}modules`}>模块</a>
+          <a href={`${import.meta.env.BASE_URL}guide`}>维护说明</a>
         </nav>
       </div>
     </header>

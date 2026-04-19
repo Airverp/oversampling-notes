@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { getAllModules, countPapersByModule } from '../../lib/papers';
 
 const modules = getAllModules();
+const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="模块索引" description="按改动模块查看过采样方法创新。">
@@ -19,7 +20,7 @@ const modules = getAllModules();
             <div class="badges">
               <span class="badge">{countPapersByModule(module.key)} 篇记录</span>
             </div>
-            <h2 style="margin-top: 0.9rem;"><a href={`/modules/${module.slug}`}>{module.name}</a></h2>
+            <h2 style="margin-top: 0.9rem;"><a href={`${base}modules/${module.slug}`}>{module.name}</a></h2>
             <p>{module.shortDescription}</p>
           </div>
           <div class="callout">判断问题：{module.guidingQuestion}</div>

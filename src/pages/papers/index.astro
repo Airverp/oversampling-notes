@@ -5,6 +5,7 @@ import { getAllKeywords, getAllPapers, getAllYears, getModuleByKey } from '../..
 const papers = getAllPapers();
 const years = getAllYears();
 const keywords = getAllKeywords();
+const base = import.meta.env.BASE_URL;
 ---
 
 <Layout title="论文列表" description="按论文查看过采样方法与创新点。">
@@ -41,7 +42,7 @@ const keywords = getAllKeywords();
           {papers.map((paper) => (
             <tr>
               <td>
-                <a href={`/papers/${paper.id}`}>{paper.title}</a>
+                <a href={`${base}papers/${paper.id}`}>{paper.title}</a>
                 <div class="muted">{paper.authors}</div>
               </td>
               <td>{paper.year}</td>
@@ -49,7 +50,7 @@ const keywords = getAllKeywords();
               <td>
                 <div class="tag-list">
                   {paper.modules.map((module) => (
-                    <a class="tag" href={`/modules/${getModuleByKey(module.key)?.slug}`}>{module.moduleName}</a>
+                    <a class="tag" href={`${base}modules/${getModuleByKey(module.key)?.slug}`}>{module.moduleName}</a>
                   ))}
                 </div>
               </td>
