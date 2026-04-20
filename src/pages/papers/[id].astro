@@ -1,6 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { getAllPapers } from '../../lib/papers';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
 
 export function getStaticPaths() {
   return getAllPapers().map((paper) => ({
@@ -14,6 +16,14 @@ const base = import.meta.env.BASE_URL;
 const figureSrc = paper.figure
   ? (paper.figure.src.startsWith('/') ? `${base}${paper.figure.src.slice(1)}` : `${base}${paper.figure.src}`)
   : null;
+const renderFormula = (formula: string) =>
+  katex.renderToString(formula, {
+    throwOnError: false,
+    displayMode: true,
+    output: 'html',
+    trust: true,
+    strict: 'ignore',
+  });
 ---
 
 <Layout title={paper.title} description={paper.innovationSummary}>
@@ -67,7 +77,7 @@ const figureSrc = paper.figure
         <article class="detail-block stack memory-aid-block">
           <div>
             <h2>理解辅助</h2>
-            <p class="muted">先看图，再记三步：定轮廓、限位置、清边界。</p>
+            <p class="muted">先看图，再记方法主线。</p>
           </div>
 
           {paper.figure && figureSrc && (
@@ -115,7 +125,7 @@ const figureSrc = paper.figure
               {step.formula && (
                 <div class="formula-block">
                   <strong>公式</strong>
-                  <pre>{step.formula}</pre>
+                  <div class="formula-rendered" set:html={renderFormula(step.formula)} />
                 </div>
               )}
               {step.formulaNote && (

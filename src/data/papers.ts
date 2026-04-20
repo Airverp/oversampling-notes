@@ -330,9 +330,9 @@ export const papers: PaperEntry[] = [
       doi: 'https://doi.org/10.1016/j.eswa.2024.125422',
     },
     figure: {
-      src: 'paper-assets/mlos-2025/method-memory-map.svg',
-      alt: 'MLOS 方法记忆图：多数类密度轮廓、辅助点约束生成、pair-wise 清理',
-      caption: '先看多数类密度，再约束生成位置，最后清理边界。',
+      src: 'paper-assets/mlos-2025/figure-paper.jpg',
+      alt: 'MLOS 论文中的实验可视化图',
+      caption: '论文原图：不同过采样方法在重叠数据上的结果对比，其中右下角为 MLOS。',
     },
     methodSteps: [
       {
