@@ -404,12 +404,13 @@ export const papers: PaperEntry[] = [
     detailedNotes: [
       '先用扩展自然邻域划分局部区域，而不是先固定一个全局 k 值。',
       '再围绕少数类边界点构造超球体，决定样本可以生成在哪一块区域。',
+      '超球体内部不包含多数类样本，这样生成空间先天就更安全。',
       '每个超球体的采样权重不是固定的，而是根据局部结构自适应分配。',
       '噪声点和离群点不直接删除，而是用差分进化调整位置。',
       '最终在多个加权超球体内部生成新样本。',
     ],
-    memorySummary: 'AHOBENN 的主线是：先用扩展自然邻域分区，再围绕边界点建自适应超球体，最后按球体权重在球内采样。',
-    memoryAnchors: ['先做扩展自然邻域分区。', '再围绕边界点建球。', '球半径和权重都自适应。', '最后在球内采样。'],
+    memorySummary: 'AHOBENN 的主线是：先用扩展自然邻域分区，再围绕边界点建不含多数类样本的自适应超球体，最后按球体权重在球内采样。',
+    memoryAnchors: ['先做扩展自然邻域分区。', '再围绕边界点建球。', '球内不放多数类样本。', '球半径和权重都自适应。', '最后在球内采样。'],
     applicability: '适合局部密度不均、少数类结构较复杂的表格型不平衡分类任务。',
     limitations: '方法效果依赖自然邻域与局部半径估计质量，在高维、小样本或强噪声场景下可能更敏感。',
     citation: 'Zhou, Y., Yue, X., Li, J., Liu, X., Sun, W., & Li, J. (2026). A novel adaptive hyperspherical oversampling method based on extended natural neighborhood for imbalanced classification. Knowledge-Based Systems, 339, 115644.',
@@ -427,9 +428,9 @@ export const papers: PaperEntry[] = [
       {
         title: '步骤 2：围绕边界点建超球体',
         action: '围绕少数类边界点构造超球体，把可生成区域限制在球内部。',
-        formula: 'B_i = { x | ||x - c_i|| ≤ r_i }\nr_i = g(ENN(x_i), border(x_i))',
-        formulaNote: '第一行定义第 i 个超球体，第二行表示半径 r_i 由扩展自然邻域和边界信息自适应决定，而不是固定常数。',
-        purpose: '把生成区域从简单线段扩展成更灵活的局部球体区域。',
+        formula: 'B_i = \{ x \mid \|x - c_i\| \le r_i \}\nM \cap B_i = \varnothing\nr_i = g(ENN(x_i), border(x_i))',
+        formulaNote: '第一行定义第 i 个超球体，第二行表示球内不包含多数类样本，第三行表示半径 r_i 由扩展自然邻域和边界信息自适应决定。',
+        purpose: '把生成区域限制在更安全的局部球体内，减少一开始就跨进多数类区域的风险。',
       },
       {
         title: '步骤 3：给每个球分配权重',
