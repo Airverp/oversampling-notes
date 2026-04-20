@@ -9,13 +9,13 @@ const stats = getSiteStats();
 const base = import.meta.env.BASE_URL;
 ---
 
-<Layout title="首页" description="不平衡表格数据过采样论文与创新点整理站点。">
+<Layout title="首页" description="我用来整理不平衡表格数据过采样论文的方法笔记站点。">
   <section class="hero stack">
     <span class="badge">学术知识库 · 表格型不平衡数据 · 过采样方法</span>
-    <h1>把你看过的过采样论文，整理成一个能长期积累的方法地图。</h1>
+    <h1>我把看过的过采样论文，整理成一个能长期积累的方法地图。</h1>
     <p class="page-lead">
-      这个网站的重点不是存题目，而是把每篇论文拆成固定模块，并且支持按论文、按模块、按创新位置去回看。
-      以后你新增论文时，只需要继续往同一套框架里填内容，就能慢慢形成自己的方法谱系。
+      这个网站对我来说，不是单纯存论文题目，而是把每篇论文拆成固定结构，方便我按论文、按方法步骤、按创新位置反复回看。
+      以后我继续往这套框架里补内容，就能慢慢把自己的过采样方法谱系搭起来。
     </p>
     <div class="actions">
       <a class="button" href={`${base}papers`}>进入论文知识库</a>
@@ -28,38 +28,38 @@ const base = import.meta.env.BASE_URL;
     <article class="card stat-card">
       <span class="stat-label">已录入论文</span>
       <strong class="stat-value">{stats.paperCount}</strong>
-      <p class="muted">持续扩展你的过采样方法库。</p>
+      <p class="muted">我在持续扩展这份过采样方法库。</p>
     </article>
     <article class="card stat-card">
       <span class="stat-label">主模块</span>
       <strong class="stat-value">{stats.moduleCount}</strong>
-      <p class="muted">统一框架整理创新点，避免越记越乱。</p>
+      <p class="muted">我用统一框架整理创新点，避免越记越乱。</p>
     </article>
     <article class="card stat-card">
       <span class="stat-label">关键词</span>
       <strong class="stat-value">{stats.keywordCount}</strong>
-      <p class="muted">帮助你从方法主题快速回看文献。</p>
+      <p class="muted">我可以从方法主题快速回看文献。</p>
     </article>
   </section>
 
   <section style="margin-top: 2rem;" class="grid cols-2 knowledge-split">
     <article class="detail-block stack">
       <div>
-        <h2 class="section-title">推荐起点</h2>
-        <p class="page-lead">如果你是为了回顾思路，建议先从论文入口和模块入口开始。</p>
+        <h2 class="section-title">我通常从这里开始</h2>
+        <p class="page-lead">如果我是为了快速回顾思路，我一般先从论文入口和模块入口开始。</p>
       </div>
       <div class="stack compact-list">
         <a class="link-card" href={`${base}papers`}>
           <strong>论文列表</strong>
-          <span>快速扫读每篇论文的核心创新与改动模块。</span>
+          <span>快速扫读每篇论文的核心做法、公式和方法步骤。</span>
         </a>
         <a class="link-card" href={`${base}modules`}>
           <strong>模块索引</strong>
-          <span>横向比较“同一类创新”在不同论文里的实现方式。</span>
+          <span>横向比较同一类创新在不同论文里的实现方式。</span>
         </a>
         <a class="link-card" href={`${base}guide`}>
           <strong>维护说明</strong>
-          <span>以后新增论文时，直接照模板填就行。</span>
+          <span>以后新增论文时，我直接照着模板继续补就行。</span>
         </a>
       </div>
     </article>
@@ -67,7 +67,7 @@ const base = import.meta.env.BASE_URL;
     <article class="detail-block stack">
       <div>
         <h2 class="section-title">最近录入</h2>
-        <p class="page-lead">这里展示当前最值得优先回看的几篇论文。</p>
+        <p class="page-lead">这里放的是我当前最值得优先回看的几篇论文。</p>
       </div>
       <div class="stack compact-list">
         {recent.map((paper) => (
@@ -83,7 +83,7 @@ const base = import.meta.env.BASE_URL;
   <section style="margin-top: 2rem;" class="stack">
     <div>
       <h2 class="section-title">六个主模块</h2>
-      <p class="page-lead">这六个模块是你整理过采样方法时的固定骨架。</p>
+      <p class="page-lead">这是我整理过采样方法时反复使用的固定骨架。</p>
     </div>
     <div class="grid cols-3">
       {modules.map((module) => (
@@ -99,7 +99,7 @@ const base = import.meta.env.BASE_URL;
   <section style="margin-top: 2rem;" class="stack">
     <div>
       <h2 class="section-title">代表性论文</h2>
-      <p class="page-lead">先看这些示例，你会更快进入这套整理方式。</p>
+      <p class="page-lead">我先看这些示例，就能更快进入这套整理方式。</p>
     </div>
     <div class="grid cols-2">
       {featured.map((paper) => (

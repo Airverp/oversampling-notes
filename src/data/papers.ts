@@ -32,12 +32,20 @@ export interface PaperEntry {
   links: {
     paper?: string;
     code?: string;
+    doi?: string;
   };
   figure?: {
     src: string;
     alt: string;
     caption: string;
   };
+  methodSteps?: {
+    title: string;
+    action: string;
+    formula?: string;
+    formulaNote?: string;
+    purpose: string;
+  }[];
   modules: PaperModule[];
 }
 
@@ -106,13 +114,38 @@ export const papers: PaperEntry[] = [
     baseline: '随机过采样',
     innovationSummary: '在少数类近邻连线上做线性插值，建立了后续多数过采样方法的标准基线。',
     detailedNotes: [
-      '它的核心价值是把“复制样本”变成“在近邻之间生成新样本”。',
-      '后续很多方法都可以被看成是在 SMOTE 的某个模块上做局部改造。',
+      '先为每个少数类样本找到少数类近邻。',
+      '再在样本和近邻之间插值生成新样本。',
+      '新样本落在线段内部，而不是直接复制原样本。',
+      '目标是扩大少数类分布范围，减轻简单复制带来的过拟合。',
     ],
+    memorySummary: 'SMOTE 就是一句话：找近邻，连成线，再在线段上插值。',
+    memoryAnchors: ['先找少数类近邻。', '再在线段上插值。', '不复制，改为生成中间点。'],
     applicability: '适合作为所有表格型过采样方法的比较基线。',
     limitations: '容易在类重叠区域或噪声点附近生成不可靠样本。',
     citation: 'Chawla et al., 2002',
     links: {},
+    methodSteps: [
+      {
+        title: '步骤 1：寻找近邻',
+        action: '对每个少数类样本找到 k 个少数类近邻。',
+        formula: 'N_k(x_i)',
+        formulaNote: 'N_k(x_i) 表示样本 x_i 的 k 个少数类近邻。',
+        purpose: '先确定插值要连向哪些点。',
+      },
+      {
+        title: '步骤 2：线性插值',
+        action: '在样本和某个近邻之间生成新样本。',
+        formula: 'x_new = x_i + λ (x_j - x_i),   λ ∈ (0, 1)',
+        formulaNote: 'x_j 是少数类近邻，λ 是 0 到 1 之间的随机数。',
+        purpose: '让新样本出现在少数类局部区域内部，而不是简单复制原样本。',
+      },
+      {
+        title: '步骤 3：补足数量',
+        action: '重复插值，直到少数类样本数达到设定目标。',
+        purpose: '用生成样本平衡类别分布。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
@@ -145,13 +178,38 @@ export const papers: PaperEntry[] = [
     baseline: 'SMOTE',
     innovationSummary: '把重点从“所有少数类”转向“决策边界附近的危险样本”，强化边界学习。',
     detailedNotes: [
-      '它最重要的创新是样本选择策略，而不是生成公式本身。',
-      '很多后续论文都继承了“优先放大边界区域”的思路。',
+      '先统计少数类样本周围的多数类比例。',
+      '只对危险区里的少数类样本做过采样。',
+      '生成方式仍然是在少数类近邻之间插值。',
+      '重点不是改公式，而是改“哪些点值得生成”。',
     ],
+    memorySummary: 'Borderline-SMOTE 的核心不是新公式，而是先找边界危险点，再只放大这些点。',
+    memoryAnchors: ['先判定危险样本。', '只放大边界区。', '插值公式基本不变。'],
     applicability: '适合边界模糊、少数类被多数类包围较严重的表格数据。',
     limitations: '如果危险样本本身受噪声污染，生成结果可能仍然不稳定。',
     citation: 'Han et al., 2005',
     links: {},
+    methodSteps: [
+      {
+        title: '步骤 1：判断是否在边界',
+        action: '统计少数类样本邻域里多数类样本所占比例。',
+        formula: 'r_i = (# majority in N_k(x_i)) / k',
+        formulaNote: 'r_i 越大，说明该点越靠近边界或越危险。',
+        purpose: '先找出最需要被放大的少数类样本。',
+      },
+      {
+        title: '步骤 2：选择危险样本',
+        action: '只对危险区里的少数类样本做过采样。',
+        purpose: '把生成预算集中到决策边界附近。',
+      },
+      {
+        title: '步骤 3：插值生成',
+        action: '在危险样本与少数类近邻之间插值生成新样本。',
+        formula: 'x_new = x_i + λ (x_j - x_i),   λ ∈ (0, 1)',
+        formulaNote: '公式和 SMOTE 基本一样，变化主要在于选谁生成。',
+        purpose: '增强边界区域的少数类密度。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
@@ -184,13 +242,40 @@ export const papers: PaperEntry[] = [
     baseline: 'SMOTE',
     innovationSummary: '根据局部学习难度自适应分配生成数量，让难学样本附近生成更多新样本。',
     detailedNotes: [
-      'ADASYN 把“生成多少”也纳入设计，而不是只关心“怎么生成”。',
-      '它适合归入样本选择与任务耦合之间的桥梁型方法。',
+      '先计算每个少数类样本的局部难度。',
+      '难度越高的样本，分到的生成数量越多。',
+      '真正生成时，仍然是在少数类近邻之间插值。',
+      '重点不是改插值公式，而是改每个样本该生成多少次。',
     ],
+    memorySummary: 'ADASYN 的关键是按难度分配生成次数：越难的点，周围生成得越多。',
+    memoryAnchors: ['先算难度。', '再按难度分配数量。', '最后仍用插值生成。'],
     applicability: '适合局部难度分布不均的表格数据。',
     limitations: '如果难样本区域本身含噪，可能会过度放大噪声。',
     citation: 'He et al., 2008',
     links: {},
+    methodSteps: [
+      {
+        title: '步骤 1：计算局部难度',
+        action: '统计每个少数类样本邻域里的多数类比例。',
+        formula: 'r_i = (# majority in N_k(x_i)) / k',
+        formulaNote: 'r_i 越大，表示该点越难学。',
+        purpose: '先知道哪些少数类样本更需要被补。',
+      },
+      {
+        title: '步骤 2：分配生成数量',
+        action: '根据难度给每个少数类样本分配不同的生成次数。',
+        formula: 'g_i = (r_i / Σ r_i) × G',
+        formulaNote: 'G 是总共要生成的新样本数。',
+        purpose: '把更多生成预算分给更难学习的区域。',
+      },
+      {
+        title: '步骤 3：插值生成',
+        action: '按分配结果，在少数类近邻之间插值生成样本。',
+        formula: 'x_new = x_i + λ (x_j - x_i)',
+        formulaNote: '生成公式与 SMOTE 类似，重点在于数量分配。',
+        purpose: '让困难区域得到更多补样。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
@@ -223,19 +308,18 @@ export const papers: PaperEntry[] = [
     baseline: '17 oversampling baselines on 16 datasets',
     innovationSummary: '提出 MLOS：在马氏距离空间中结合多数类分布与局部密度信息引导少数类样本生成，并配合边界清理减少重叠区域噪声。',
     detailedNotes: [
-      '这篇论文最值得记住的不是“马氏距离”四个字本身，而是它把多数类分布正式拉进了过采样决策过程：先看多数类概率轮廓，再决定少数类样本该往哪里生成。',
-      '作者的判断是：在极端少数类稀缺时，只靠少数类自身近邻并不足以支撑可靠生成，因为可用局部结构太少，稍微插值就可能越过真实边界。',
-      'MLOS 的第一步是用马氏距离刻画多数类概率密度轮廓，让模型知道哪些区域属于“高风险重叠区”，从而避免像普通 SMOTE 那样只在少数类内部盲目连线。',
-      '第二步是给每个少数类种子样本找一个局部辅助点，而且要求辅助点与种子样本在多数类密度意义下相近；这相当于给生成位置加了一道“局部一致性”约束。',
-      '第三步不是生成完就结束，而是再做 pair-wise data cleaning，根据合成样本的概率密度清理边界附近不干净的样本，因此它在“生成后修边界”上也有明确设计。',
-      '如果你要把它和普通边界型方法区分开，一个很好的记忆方式是：别的方法主要在问“哪些少数类点更值得放大”，而 MLOS 在问“多数类密度允许你把新样本放到哪里”。',
+      '先用多数类样本估计概率密度轮廓，判断哪些区域容易发生类重叠。',
+      '对每个少数类种子样本，在 5 个近邻里找一个与它密度最接近的辅助点。',
+      '在种子样本和辅助点之间插值生成新样本。',
+      '生成后再做 pair-wise cleaning，删除边界附近不干净的合成样本。',
+      '目标是减少重叠区域里的越界生成。',
     ],
-    memorySummary: '把 MLOS 记成“三段式”：先用多数类密度定危险轮廓，再用相似密度辅助点限位生成，最后用 pair-wise cleaning 把边界重新擦干净。',
+    memorySummary: 'MLOS 做三件事：先看多数类密度，再按相近密度找辅助点生成，最后清掉边界脏样本。',
     memoryAnchors: [
-      '不是只看少数类，而是先看多数类密度。',
-      '马氏距离 = 用协方差结构刻画多数类概率轮廓。',
-      '辅助点 = 给生成位置加局部一致性约束。',
-      '生成之后还要清边界，不是生成完就结束。',
+      '先画多数类密度图。',
+      '再找密度接近的辅助点。',
+      '然后插值生成。',
+      '最后清理边界样本。',
     ],
     applicability: '适合类别极不平衡且存在明显类间重叠的表格分类任务，尤其是在欧氏距离难以刻画局部结构时。',
     limitations: '依赖马氏距离与局部密度估计质量；在高维、小样本或协方差估计不稳定的场景下，效果可能受限。',
@@ -246,10 +330,40 @@ export const papers: PaperEntry[] = [
       doi: 'https://doi.org/10.1016/j.eswa.2024.125422',
     },
     figure: {
-      src: '/paper-assets/mlos-2025/method-memory-map.svg',
+      src: 'paper-assets/mlos-2025/method-memory-map.svg',
       alt: 'MLOS 方法记忆图：多数类密度轮廓、辅助点约束生成、pair-wise 清理',
-      caption: '记忆要点：MLOS 不是只在少数类内部插值，而是先借助多数类密度判断危险区域，再约束生成，最后清理边界。',
+      caption: '先看多数类密度，再约束生成位置，最后清理边界。',
     },
+    methodSteps: [
+      {
+        title: '步骤 1：多数类密度建模',
+        action: '用马氏距离刻画多数类样本的概率密度轮廓。',
+        formula: 'd_M(x, \u03bc) = \u221a((x-\u03bc)^T \u03a3^{-1} (x-\u03bc))',
+        formulaNote: '这是马氏距离。\u03a3 是协方差矩阵，所以相关特征不会被重复计算。',
+        purpose: '先知道哪里是高风险重叠区，后面生成时才不会随便越界。',
+      },
+      {
+        title: '步骤 2：选择辅助点',
+        action: '对每个少数类种子样本，在 5 个近邻里找一个与它密度最接近的点作为辅助点。',
+        formula: 'a = arg min_{x_j \u2208 N_5(x_i)} |\u03c1(x_j) - \u03c1(x_i)|',
+        formulaNote: '\u03c1(x) 表示样本在多数类密度轮廓下的密度值。辅助点不是随便选，而是要求密度接近。',
+        purpose: '把生成位置限制在和种子样本风险水平接近的局部区域。',
+      },
+      {
+        title: '步骤 3：生成新样本',
+        action: '在种子样本和辅助点之间插值生成新样本。',
+        formula: 'x_new = x_i + \u03bb (a - x_i),   \u03bb \u2208 (0, 1)',
+        formulaNote: '形式上还是插值，但关键差别在于辅助点经过了密度约束。',
+        purpose: '让新样本落在更合理的位置，而不是像普通 SMOTE 那样只要是近邻就连线。',
+      },
+      {
+        title: '步骤 4：边界清理',
+        action: '对生成后的样本做 pair-wise cleaning，删除边界附近不干净的点。',
+        formula: 'if risk(x_new) high, remove x_new',
+        formulaNote: '论文这里的重点不是复杂公式，而是生成后还要再筛一遍边界样本。',
+        purpose: '减少新样本侵入多数类区域，降低类重叠。',
+      },
+    ],
     modules: [
       {
         key: 'distance',
@@ -281,22 +395,57 @@ export const papers: PaperEntry[] = [
     id: 'enn-ahso-2026',
     title: 'A novel adaptive hyperspherical oversampling method based on extended natural neighborhood for imbalanced classification',
     year: 2026,
-    authors: 'To be completed from the paper metadata',
+    authors: 'Yu Zhou, Xuezhen Yue, Jiguang Li, Xing Liu, Weiming Sun, Jichun Li',
     venue: 'Knowledge-Based Systems',
-    keywords: ['hypersphere', 'natural neighborhood', 'adaptive', 'tabular', 'oversampling'],
+    keywords: ['hypersphere', 'natural neighborhood', 'adaptive', 'tabular', 'oversampling', 'AHOBENN'],
     problem: '传统 SMOTE 类方法往往依赖固定近邻或线性插值，难以准确反映局部数据密度与少数类真实几何结构。',
     baseline: 'SMOTE, ADASYN and related oversampling methods',
-    innovationSummary: '基于扩展自然邻域自适应构造超球体，并在球内生成少数类样本，使生成半径能随局部结构变化而调整。',
+    innovationSummary: '提出 AHOBENN：先用扩展自然邻域划分局部区域，再围绕边界少数类点构造自适应超球体，并按权重在球内生成样本。',
     detailedNotes: [
-      '这篇论文的核心不只是“用超球体生成”，更关键的是先用扩展自然邻域刻画局部结构，再据此自适应确定球体半径。',
-      '如果你要和普通 hypersphere 类方法比较，可以重点看它如何把自然邻域信息引入生成空间控制。',
+      '先用扩展自然邻域划分局部区域，而不是先固定一个全局 k 值。',
+      '再围绕少数类边界点构造超球体，决定样本可以生成在哪一块区域。',
+      '每个超球体的采样权重不是固定的，而是根据局部结构自适应分配。',
+      '噪声点和离群点不直接删除，而是用差分进化调整位置。',
+      '最终在多个加权超球体内部生成新样本。',
     ],
+    memorySummary: 'AHOBENN 的主线是：先用扩展自然邻域分区，再围绕边界点建自适应超球体，最后按球体权重在球内采样。',
+    memoryAnchors: ['先做扩展自然邻域分区。', '再围绕边界点建球。', '球半径和权重都自适应。', '最后在球内采样。'],
     applicability: '适合局部密度不均、少数类结构较复杂的表格型不平衡分类任务。',
     limitations: '方法效果依赖自然邻域与局部半径估计质量，在高维、小样本或强噪声场景下可能更敏感。',
-    citation: 'Knowledge-Based Systems, 2026',
+    citation: 'Zhou, Y., Yue, X., Li, J., Liu, X., Sun, W., & Li, J. (2026). A novel adaptive hyperspherical oversampling method based on extended natural neighborhood for imbalanced classification. Knowledge-Based Systems, 339, 115644.',
     links: {
       paper: 'https://www.sciencedirect.com/science/article/pii/S0950705126003849',
     },
+    methodSteps: [
+      {
+        title: '步骤 1：扩展自然邻域分区',
+        action: '先用扩展自然邻域方法划分局部区域，建立每个样本周围的自然邻域关系。',
+        formula: 'ENN(x_i)',
+        formulaNote: 'ENN(x_i) 表示样本 x_i 的扩展自然邻域。它不是固定 k 近邻，而是由局部结构决定。',
+        purpose: '先把局部结构描述清楚，后面建球时才不会太僵硬。',
+      },
+      {
+        title: '步骤 2：围绕边界点建超球体',
+        action: '围绕少数类边界点构造超球体，把可生成区域限制在球内部。',
+        formula: 'B_i = { x | ||x - c_i|| ≤ r_i }',
+        formulaNote: 'c_i 是球心，r_i 是球半径。半径不是统一常数，而是按局部结构自适应确定。',
+        purpose: '把生成区域从简单线段扩展成更灵活的局部球体区域。',
+      },
+      {
+        title: '步骤 3：给每个球分配权重',
+        action: '根据扩展自然邻域和局部结构信息，为每个超球体分配采样权重。',
+        formula: 'p_i ∝ w_i',
+        formulaNote: 'w_i 表示第 i 个超球体的采样权重。论文用局部结构和万有引力思想来定义它。',
+        purpose: '让不同区域生成样本的多少不同，而不是所有球一视同仁。',
+      },
+      {
+        title: '步骤 4：球内采样并处理噪声点',
+        action: '按权重在超球体内部生成新样本，同时用差分进化调整噪声点和离群点的位置。',
+        formula: 'x_new ~ Uniform(B_i)',
+        formulaNote: '这里表示新样本在选中的超球体内部采样生成。噪声点不是直接删，而是先优化位置。',
+        purpose: '在更贴合局部几何的区域里生成样本，同时减少噪声点的破坏。',
+      },
+    ],
     modules: [
       {
         key: 'distance',

@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { buildModuleHighlights, getAllPapers } from '../../lib/papers';
+import { getAllPapers } from '../../lib/papers';
 
 export function getStaticPaths() {
   return getAllPapers().map((paper) => ({
@@ -10,8 +10,10 @@ export function getStaticPaths() {
 }
 
 const { paper } = Astro.props;
-const moduleHighlights = buildModuleHighlights(paper);
 const base = import.meta.env.BASE_URL;
+const figureSrc = paper.figure
+  ? (paper.figure.src.startsWith('/') ? `${base}${paper.figure.src.slice(1)}` : `${base}${paper.figure.src}`)
+  : null;
 ---
 
 <Layout title={paper.title} description={paper.innovationSummary}>
@@ -52,7 +54,6 @@ const base = import.meta.env.BASE_URL;
         <dl class="meta-list">
           <div class="meta-row"><dt>局限</dt><dd>{paper.limitations}</dd></div>
           <div class="meta-row"><dt>引用标记</dt><dd>{paper.citation}</dd></div>
-          <div class="meta-row"><dt>涉及模块</dt><dd>{moduleHighlights.map((module) => module.moduleName).join('、')}</dd></div>
         </dl>
         {paper.links.paper && (
           <div class="actions">
@@ -66,12 +67,12 @@ const base = import.meta.env.BASE_URL;
         <article class="detail-block stack memory-aid-block">
           <div>
             <h2>理解辅助</h2>
-            <p class="muted">把这篇论文压缩成一张图和几条记忆锚点，帮助快速回忆方法骨架。</p>
+            <p class="muted">先看图，再记三步：定轮廓、限位置、清边界。</p>
           </div>
 
-          {paper.figure && (
+          {paper.figure && figureSrc && (
             <figure class="memory-figure">
-              <img src={paper.figure.src} alt={paper.figure.alt} loading="lazy" />
+              <img src={figureSrc} alt={paper.figure.alt} loading="lazy" />
               <figcaption>{paper.figure.caption}</figcaption>
             </figure>
           )}
@@ -88,37 +89,50 @@ const base = import.meta.env.BASE_URL;
     </div>
 
     <article class="detail-block stack">
-      <h2>你的阅读备注</h2>
+      <h2>阅读备注</h2>
       <ul class="timeline">
         {paper.detailedNotes.map((note: string) => <li>{note}</li>)}
       </ul>
     </article>
 
-    <article class="detail-block stack">
-      <div>
-        <h2>模块拆解</h2>
-        <p class="muted">这篇论文的创新分别落在哪些模块上。</p>
-      </div>
-      <div class="grid cols-2">
-        {moduleHighlights.map((module, index) => (
-          <article class="card stack numbered-card">
-            <div class="number-badge">0{index + 1}</div>
-            <div>
-              <h3><a href={`${base}modules/${module.definition.slug}`}>{module.moduleName}</a></h3>
-              <p class="muted">{module.definition.shortDescription}</p>
-            </div>
-            <div>
-              <strong>创新点</strong>
-              <p>{module.changeSummary}</p>
-            </div>
-            <div>
-              <strong>详细说明</strong>
-              <p>{module.detail}</p>
-            </div>
-          </article>
-        ))}
-      </div>
-    </article>
+    {paper.methodSteps && paper.methodSteps.length > 0 && (
+      <article class="detail-block stack">
+        <div>
+          <h2>方法流程拆解</h2>
+          <p class="muted">按论文真正的处理顺序看：先估计密度，再选辅助点，再生成，最后清理。</p>
+        </div>
+        <div class="grid cols-2">
+          {paper.methodSteps.map((step, index) => (
+            <article class="card stack numbered-card method-step-card">
+              <div class="number-badge">0{index + 1}</div>
+              <div>
+                <h3>{step.title}</h3>
+              </div>
+              <div>
+                <strong>做什么</strong>
+                <p>{step.action}</p>
+              </div>
+              {step.formula && (
+                <div class="formula-block">
+                  <strong>公式</strong>
+                  <pre>{step.formula}</pre>
+                </div>
+              )}
+              {step.formulaNote && (
+                <div>
+                  <strong>公式说明</strong>
+                  <p>{step.formulaNote}</p>
+                </div>
+              )}
+              <div>
+                <strong>这一步的作用</strong>
+                <p>{step.purpose}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </article>
+    )}
   </section>
 </Layout>
 
