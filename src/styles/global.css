@@ -49,8 +49,8 @@ button {
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid rgba(213, 206, 193, 0.85);
-  background: rgba(244, 241, 234, 0.92);
+  border-bottom: 1px solid rgba(217, 222, 229, 0.9);
+  background: rgba(245, 246, 247, 0.92);
   backdrop-filter: blur(12px);
 }
 
