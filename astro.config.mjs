@@ -3,5 +3,5 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   site: 'https://airverp.github.io',
-  base: '/oversampling-notes',
+  base: '/oversampling-notes/',
 });
