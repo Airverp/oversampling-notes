@@ -38,6 +38,7 @@ export interface PaperEntry {
     src: string;
     alt: string;
     caption: string;
+    kind?: 'flowchart' | 'result-figure';
   };
   methodSteps?: {
     title: string;
@@ -333,6 +334,7 @@ export const papers: PaperEntry[] = [
       src: 'paper-assets/mlos-2025/figure-paper.jpg',
       alt: 'MLOS 论文中的实验可视化图',
       caption: '论文原图：不同过采样方法在重叠数据上的结果对比，其中右下角为 MLOS。',
+      kind: 'result-figure',
     },
     methodSteps: [
       {

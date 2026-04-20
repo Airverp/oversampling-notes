@@ -505,7 +505,7 @@ th {
 
 .formula-rendered {
   padding: 1.05rem 1.2rem;
-  overflow-x: auto;
+  overflow: visible;
   border-radius: 16px;
   border: 1px solid rgba(45, 79, 115, 0.14);
   background: #f8f5ee;
@@ -513,9 +513,17 @@ th {
 
 .formula-rendered .katex-display {
   margin: 0;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 .formula-rendered .katex {
-  font-size: 1.28em;
+  font-size: 1.18em;
   color: var(--accent);
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.formula-rendered .katex-display > .katex {
+  white-space: normal;
 }

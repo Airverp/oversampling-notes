@@ -16,6 +16,7 @@ const base = import.meta.env.BASE_URL;
 const figureSrc = paper.figure
   ? (paper.figure.src.startsWith('/') ? `${base}${paper.figure.src.slice(1)}` : `${base}${paper.figure.src}`)
   : null;
+const hasFlowchart = paper.figure?.kind === 'flowchart';
 const renderFormula = (formula: string) =>
   katex.renderToString(formula, {
     throwOnError: false,
@@ -77,10 +78,10 @@ const renderFormula = (formula: string) =>
         <article class="detail-block stack memory-aid-block">
           <div>
             <h2>理解辅助</h2>
-            <p class="muted">先看图，再记方法主线。</p>
+            <p class="muted">{hasFlowchart ? '先看流程图，再记方法主线。' : '这里补充有助于理解方法主线的关键信息。'}</p>
           </div>
 
-          {paper.figure && figureSrc && (
+          {paper.figure && figureSrc && hasFlowchart && (
             <figure class="memory-figure">
               <img src={figureSrc} alt={paper.figure.alt} loading="lazy" />
               <figcaption>{paper.figure.caption}</figcaption>
