@@ -20,7 +20,7 @@ html {
   font-family: "Noto Serif SC", "Source Han Serif SC", "Georgia", serif;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 body {
@@ -500,19 +500,19 @@ th {
 
 .formula-block {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.45rem;
 }
 
 .formula-block pre {
   margin: 0;
-  padding: 0.9rem 1rem;
+  padding: 1.2rem 1.3rem;
   overflow-x: auto;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid rgba(45, 79, 115, 0.14);
   background: #f8f5ee;
   color: var(--accent);
-  font-family: "Times New Roman", "Georgia", serif;
-  font-size: 1rem;
-  line-height: 1.55;
+  font-family: "Cambria Math", "Times New Roman", "Georgia", serif;
+  font-size: 1.22rem;
+  line-height: 1.58;
   white-space: pre-wrap;
 }
