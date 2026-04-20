@@ -44,6 +44,7 @@ export interface PaperEntry {
     title: string;
     action: string;
     formula?: string;
+    formulaLines?: string[];
     formulaNote?: string;
     purpose: string;
   }[];
@@ -340,37 +341,39 @@ export const papers: PaperEntry[] = [
       {
         title: '步骤 1：多数类密度建模',
         action: '用马氏距离刻画多数类样本的概率密度轮廓。',
-        formula: String.raw`\begin{aligned}
-d_M(x,\mu) &= \sqrt{(x-\mu)^T\Sigma^{-1}(x-\mu)} \\
-\rho(x) &= f\!\left(d_M(x,\mu_M)\right)
-\end{aligned}`,
+        formulaLines: [
+          String.raw`d_M(x,\mu)=\sqrt{(x-\mu)^T\Sigma^{-1}(x-\mu)}`,
+          String.raw`\rho(x)=f\!\left(d_M(x,\mu_M)\right)`,
+        ],
         formulaNote: '第一行是马氏距离，第二行表示把距离映射成多数类密度值。Σ 是协方差矩阵，所以相关特征不会被重复计算。',
         purpose: '先知道哪里是高风险重叠区，后面生成时才不会随便越界。',
       },
       {
         title: '步骤 2：选择辅助点',
         action: '对每个少数类种子样本，在 5 个近邻里找一个与它密度最接近的点作为辅助点。',
-        formula: String.raw`\begin{aligned}
-N_5(x_i) &= \{x_j \mid x_j\text{ 是 }x_i\text{ 的 5 个近邻之一}\} \\
-a &= \arg\min_{x_j\in N_5(x_i)} \lvert \rho(x_j)-\rho(x_i) \rvert
-\end{aligned}`,
+        formulaLines: [
+          String.raw`N_5(x_i)=\{x_j\mid x_j\text{ is one of the 5 nearest neighbors of }x_i\}`,
+          String.raw`a=\arg\min_{x_j\in N_5(x_i)}\lvert \rho(x_j)-\rho(x_i)\rvert`,
+        ],
         formulaNote: '先限定候选集合 N_5(x_i)，再选出与种子样本密度差最小的辅助点 a。这个约束的作用是避免辅助点落到风险水平差太大的区域。',
         purpose: '把生成位置限制在和种子样本风险水平接近的局部区域，减少一开始就跨进高风险重叠区的概率。',
       },
       {
         title: '步骤 3：生成新样本',
         action: '在种子样本和辅助点之间插值生成新样本。',
-        formula: String.raw`\begin{aligned}
-\lambda &\sim U(0,1) \\
-x_{\mathrm{new}} &= x_i + \lambda\,(a-x_i)
-\end{aligned}`,
+        formulaLines: [
+          String.raw`\lambda\sim U(0,1)`,
+          String.raw`x_{\mathrm{new}}=x_i+\lambda(a-x_i)`,
+        ],
         formulaNote: '先从 0 到 1 的均匀分布采样 λ，再在种子样本 x_i 和辅助点 a 之间生成新样本。形式上还是插值，但辅助点已经过密度约束。',
         purpose: '让新样本落在更合理的位置，而不是像普通 SMOTE 那样只要是近邻就连线。',
       },
       {
         title: '步骤 4：边界清理',
         action: '对生成后的样本做 pair-wise cleaning，删除边界附近不干净的点。',
-        formula: String.raw`\text{if }\operatorname{risk}(x_{\mathrm{new}}) > \tau,\; \text{remove }x_{\mathrm{new}}`,
+        formulaLines: [
+          String.raw`\text{if }\operatorname{risk}(x_{\mathrm{new}})>\tau,\;\text{remove }x_{\mathrm{new}}`,
+        ],
         formulaNote: 'τ 表示清理阈值。论文重点不是复杂公式，而是生成后还要再筛一遍边界样本。',
         purpose: '减少新样本侵入多数类区域，降低类重叠。',
       },
@@ -432,39 +435,41 @@ x_{\mathrm{new}} &= x_i + \lambda\,(a-x_i)
       {
         title: '步骤 1：扩展自然邻域分区',
         action: '先用扩展自然邻域方法划分局部区域，建立每个样本周围的自然邻域关系。',
-        formula: String.raw`\mathrm{ENN}(x_i)=\mathrm{NNat}(x_i)\cup\mathrm{ExNat}(x_i)`,
+        formulaLines: [
+          String.raw`\mathrm{ENN}(x_i)=\mathrm{NNat}(x_i)\cup\mathrm{ExNat}(x_i)`,
+        ],
         formulaNote: '这里把自然邻域和扩展邻域合在一起记为 ENN(x_i)。它不是固定 k 近邻，而是由局部结构决定。',
         purpose: '先把局部结构描述清楚，后面建球时才不会太僵硬。',
       },
       {
         title: '步骤 2：围绕边界点建超球体',
         action: '围绕少数类边界点构造超球体，把可生成区域限制在球内部。',
-        formula: String.raw`\begin{aligned}
-B_i &= \{x \mid \lVert x-c_i \rVert \le r_i\} \\
-M \cap B_i &= \varnothing \\
-r_i &= g\!\left(\mathrm{ENN}(x_i),\operatorname{border}(x_i)\right)
-\end{aligned}`,
+        formulaLines: [
+          String.raw`B_i=\{x\mid \lVert x-c_i\rVert\le r_i\}`,
+          String.raw`M\cap B_i=\varnothing`,
+          String.raw`r_i=g\!\left(\mathrm{ENN}(x_i),\operatorname{border}(x_i)\right)`,
+        ],
         formulaNote: '第一行定义第 i 个超球体，第二行表示球内不包含多数类样本，第三行表示半径 r_i 由扩展自然邻域和边界信息自适应决定。',
         purpose: '把生成区域限制在更安全的局部球体内，减少一开始就跨进多数类区域的风险。',
       },
       {
         title: '步骤 3：给每个球分配权重',
         action: '根据扩展自然邻域和局部结构信息，为每个超球体分配采样权重。',
-        formula: String.raw`\begin{aligned}
-w_i &= h\!\left(\mathrm{ENN}(x_i),\mathrm{gravitation}_i\right) \\
-p_i &= \frac{w_i}{\sum_j w_j}
-\end{aligned}`,
+        formulaLines: [
+          String.raw`w_i=h\!\left(\mathrm{ENN}(x_i),\mathrm{gravitation}_i\right)`,
+          String.raw`p_i=\frac{w_i}{\sum_j w_j}`,
+        ],
         formulaNote: '先计算超球体权重 w_i，再归一化成采样概率 p_i。论文的关键点是：不同球生成样本的多少不一样。',
         purpose: '让不同区域生成样本的多少不同，而不是所有球一视同仁。',
       },
       {
         title: '步骤 4：球内采样并处理噪声点',
         action: '按权重在超球体内部生成新样本，同时用差分进化调整噪声点和离群点的位置。',
-        formula: String.raw`\begin{aligned}
-i &\sim \operatorname{Categorical}(p_1,\ldots,p_m) \\
-x_{\mathrm{new}} &\sim \operatorname{Uniform}(B_i) \\
-x_{\mathrm{noise}}^{\ast} &= \operatorname{DE}(x_{\mathrm{noise}})
-\end{aligned}`,
+        formulaLines: [
+          String.raw`i\sim \operatorname{Categorical}(p_1,\ldots,p_m)`,
+          String.raw`x_{\mathrm{new}}\sim \operatorname{Uniform}(B_i)`,
+          String.raw`x_{\mathrm{noise}}^{\ast}=\operatorname{DE}(x_{\mathrm{noise}})`,
+        ],
         formulaNote: '先按概率选一个超球体，再在该球内部采样生成新样本。噪声点不是直接删除，而是用差分进化优化到更合理的位置。',
         purpose: '在更贴合局部几何的区域里生成样本，同时减少噪声点的破坏。',
       },

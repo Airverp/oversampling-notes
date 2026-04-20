@@ -25,6 +25,8 @@ const renderFormula = (formula: string) =>
     trust: true,
     strict: 'ignore',
   });
+const formulaLines = (step: { formula?: string; formulaLines?: string[] }) =>
+  step.formulaLines ?? (step.formula ? [step.formula] : []);
 ---
 
 <Layout title={paper.title} description={paper.innovationSummary}>
@@ -123,10 +125,12 @@ const renderFormula = (formula: string) =>
                 <strong>做什么</strong>
                 <p>{step.action}</p>
               </div>
-              {step.formula && (
+              {formulaLines(step).length > 0 && (
                 <div class="formula-block">
                   <strong>公式</strong>
-                  <div class="formula-rendered" set:html={renderFormula(step.formula)} />
+                  <div class="formula-rendered stack compact-formula-list">
+                    {formulaLines(step).map((line) => <div class="formula-line" set:html={renderFormula(line)} />)}
+                  </div>
                 </div>
               )}
               {step.formulaNote && (
