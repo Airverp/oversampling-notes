@@ -24,12 +24,19 @@ export interface PaperEntry {
   baseline: string;
   innovationSummary: string;
   detailedNotes: string[];
+  memorySummary?: string;
+  memoryAnchors?: string[];
   applicability: string;
   limitations: string;
   citation: string;
   links: {
     paper?: string;
     code?: string;
+  };
+  figure?: {
+    src: string;
+    alt: string;
+    caption: string;
   };
   modules: PaperModule[];
 }
@@ -206,35 +213,67 @@ export const papers: PaperEntry[] = [
     ],
   },
   {
-    id: 'maha-sampling-example',
-    title: 'Mahalanobis-Distance Guided Oversampling for Tabular Imbalance',
-    year: 2021,
-    authors: 'Example Placeholder',
-    venue: 'Example Venue',
-    keywords: ['Mahalanobis', 'distance metric', 'tabular', 'placeholder'],
-    problem: '欧氏距离在特征相关性强、量纲差异大的表格数据上可能失真。',
-    baseline: 'SMOTE-like methods',
-    innovationSummary: '在邻域构建阶段引入马氏距离，使近邻搜索更符合特征协方差结构。',
+    id: 'mlos-2025',
+    title: 'Synthetic oversampling with Mahalanobis distance and local information for highly imbalanced class-overlapped data',
+    year: 2025,
+    authors: 'Yuanting Yan, Lei Zheng, Shuangyue Han, Chengjin Yu, Peng Zhou',
+    venue: 'Expert Systems with Applications',
+    keywords: ['Mahalanobis distance', 'class overlap', 'highly imbalanced data', 'density-guided oversampling', 'MLOS'],
+    problem: '在高不平衡且类别重叠的表格数据中，传统过采样方法容易在边界附近生成噪声样本，导致少数类扩增与多数类分布冲突。',
+    baseline: '17 oversampling baselines on 16 datasets',
+    innovationSummary: '提出 MLOS：在马氏距离空间中结合多数类分布与局部密度信息引导少数类样本生成，并配合边界清理减少重叠区域噪声。',
     detailedNotes: [
-      '这类论文的关键不一定是生成方式，而是在“谁被视为近邻”这一步进行了重新定义。',
-      '如果你以后看到真正使用马氏距离的论文，可以直接替换这条占位记录。',
+      '这篇论文最值得记住的不是“马氏距离”四个字本身，而是它把多数类分布正式拉进了过采样决策过程：先看多数类概率轮廓，再决定少数类样本该往哪里生成。',
+      '作者的判断是：在极端少数类稀缺时，只靠少数类自身近邻并不足以支撑可靠生成，因为可用局部结构太少，稍微插值就可能越过真实边界。',
+      'MLOS 的第一步是用马氏距离刻画多数类概率密度轮廓，让模型知道哪些区域属于“高风险重叠区”，从而避免像普通 SMOTE 那样只在少数类内部盲目连线。',
+      '第二步是给每个少数类种子样本找一个局部辅助点，而且要求辅助点与种子样本在多数类密度意义下相近；这相当于给生成位置加了一道“局部一致性”约束。',
+      '第三步不是生成完就结束，而是再做 pair-wise data cleaning，根据合成样本的概率密度清理边界附近不干净的样本，因此它在“生成后修边界”上也有明确设计。',
+      '如果你要把它和普通边界型方法区分开，一个很好的记忆方式是：别的方法主要在问“哪些少数类点更值得放大”，而 MLOS 在问“多数类密度允许你把新样本放到哪里”。',
     ],
-    applicability: '适合特征相关性明显、不同维度尺度差异大的表格型数据。',
-    limitations: '依赖协方差估计质量，在高维小样本场景下可能不稳。',
-    citation: 'Replace with your actual paper',
-    links: {},
+    memorySummary: '把 MLOS 记成“三段式”：先用多数类密度定危险轮廓，再用相似密度辅助点限位生成，最后用 pair-wise cleaning 把边界重新擦干净。',
+    memoryAnchors: [
+      '不是只看少数类，而是先看多数类密度。',
+      '马氏距离 = 用协方差结构刻画多数类概率轮廓。',
+      '辅助点 = 给生成位置加局部一致性约束。',
+      '生成之后还要清边界，不是生成完就结束。',
+    ],
+    applicability: '适合类别极不平衡且存在明显类间重叠的表格分类任务，尤其是在欧氏距离难以刻画局部结构时。',
+    limitations: '依赖马氏距离与局部密度估计质量；在高维、小样本或协方差估计不稳定的场景下，效果可能受限。',
+    citation: 'Yan, Y., Zheng, L., Han, S., Yu, C., & Zhou, P. (2025). Synthetic oversampling with Mahalanobis distance and local information for highly imbalanced class-overlapped data. Expert Systems with Applications. https://doi.org/10.1016/j.eswa.2024.125422',
+    links: {
+      paper: 'https://www.sciencedirect.com/science/article/abs/pii/S0957417424022899',
+      code: 'https://github.com/ytyancp/MLOS',
+      doi: 'https://doi.org/10.1016/j.eswa.2024.125422',
+    },
+    figure: {
+      src: '/paper-assets/mlos-2025/method-memory-map.svg',
+      alt: 'MLOS 方法记忆图：多数类密度轮廓、辅助点约束生成、pair-wise 清理',
+      caption: '记忆要点：MLOS 不是只在少数类内部插值，而是先借助多数类密度判断危险区域，再约束生成，最后清理边界。',
+    },
     modules: [
       {
         key: 'distance',
         moduleName: '邻域 / 距离定义',
-        changeSummary: '使用马氏距离重定义近邻关系。',
-        detail: '通过考虑特征协方差缓解欧氏距离在相关特征下的失真。',
+        changeSummary: '在马氏距离空间中刻画样本间关系。',
+        detail: '相比欧氏距离，它显式考虑特征协方差结构，用于更合理地描述重叠数据中的局部邻域。',
+      },
+      {
+        key: 'generation-space',
+        moduleName: '生成空间约束',
+        changeSummary: '利用多数类分布与局部辅助点共同约束合成位置。',
+        detail: '新样本不是在任意少数类邻域中直接插值，而是受到多数类密度和局部结构的一致性限制。',
       },
       {
         key: 'generation-mechanism',
         moduleName: '生成机制',
-        changeSummary: '通常仍沿用插值式生成。',
-        detail: '创新重点主要放在近邻质量，而非新样本公式。',
+        changeSummary: '在局部密度相近的少数类区域内生成合成样本。',
+        detail: '方法结合近邻与辅助点策略，尽量让新样本贴合少数类局部几何，而不是简单线性外推。',
+      },
+      {
+        key: 'quality-control',
+        moduleName: '质量控制',
+        changeSummary: '加入边界清理步骤以抑制重叠区域噪声。',
+        detail: '生成后再进行清理，减少新样本侵入多数类边界附近区域的风险。',
       },
     ],
   },

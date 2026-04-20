@@ -57,17 +57,42 @@ const base = import.meta.env.BASE_URL;
         {paper.links.paper && (
           <div class="actions">
             <a class="button" href={paper.links.paper} target="_blank" rel="noreferrer">打开论文原文</a>
+            {paper.links.code && <a class="button secondary" href={paper.links.code} target="_blank" rel="noreferrer">查看代码</a>}
           </div>
         )}
       </article>
 
-      <article class="detail-block stack">
-        <h2>你的阅读备注</h2>
-        <ul class="timeline">
-          {paper.detailedNotes.map((note: string) => <li>{note}</li>)}
-        </ul>
-      </article>
+      {(paper.figure || paper.memorySummary || paper.memoryAnchors?.length) && (
+        <article class="detail-block stack memory-aid-block">
+          <div>
+            <h2>理解辅助</h2>
+            <p class="muted">把这篇论文压缩成一张图和几条记忆锚点，帮助快速回忆方法骨架。</p>
+          </div>
+
+          {paper.figure && (
+            <figure class="memory-figure">
+              <img src={paper.figure.src} alt={paper.figure.alt} loading="lazy" />
+              <figcaption>{paper.figure.caption}</figcaption>
+            </figure>
+          )}
+
+          {paper.memorySummary && <div class="memory-callout">{paper.memorySummary}</div>}
+
+          {paper.memoryAnchors && paper.memoryAnchors.length > 0 && (
+            <div class="memory-anchor-list">
+              {paper.memoryAnchors.map((anchor: string) => <span class="memory-anchor">{anchor}</span>)}
+            </div>
+          )}
+        </article>
+      )}
     </div>
+
+    <article class="detail-block stack">
+      <h2>你的阅读备注</h2>
+      <ul class="timeline">
+        {paper.detailedNotes.map((note: string) => <li>{note}</li>)}
+      </ul>
+    </article>
 
     <article class="detail-block stack">
       <div>
