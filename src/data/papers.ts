@@ -306,8 +306,8 @@ export const papers: PaperEntry[] = [
     authors: 'Yuanting Yan, Lei Zheng, Shuangyue Han, Chengjin Yu, Peng Zhou',
     venue: 'Expert Systems with Applications',
     keywords: ['Mahalanobis distance', 'class overlap', 'highly imbalanced data', 'density-guided oversampling', 'MLOS'],
-    problem: '在高不平衡且类别重叠的表格数据中，传统过采样方法容易在边界附近生成噪声样本，导致少数类扩增与多数类分布冲突。',
-    baseline: '17 oversampling baselines on 16 datasets',
+    problem: '在高不平衡且类别重叠的表格数据中，传统过采样方法通常只利用少数类自身的邻域关系来生成新样本。但在少数类样本极少、且与多数类分布明显重叠时，少数类自身提供的局部几何信息并不充分，普通插值很容易把新样本推到边界噪声区甚至多数类区域，进一步加剧类间重叠。',
+    baseline: '方法本质上是在 SMOTE 类插值框架上继续改进，但重点不是再改线性插值公式本身，而是补上两个普通方法缺失的约束：第一，用多数类分布信息判断哪里属于高风险生成区域；第二，在生成后增加边界清理步骤。可以把它看成是“少数类插值 + 多数类密度约束 + 生成后清理”的组合改进。',
     innovationSummary: '提出 MLOS：在马氏距离空间中结合多数类分布与局部密度信息引导少数类样本生成，并配合边界清理减少重叠区域噪声。',
     detailedNotes: [
       '先用多数类样本估计概率密度轮廓，判断哪些区域容易发生类重叠。',
@@ -412,8 +412,8 @@ export const papers: PaperEntry[] = [
     authors: 'Yu Zhou, Xuezhen Yue, Jiguang Li, Xing Liu, Weiming Sun, Jichun Li',
     venue: 'Knowledge-Based Systems',
     keywords: ['hypersphere', 'natural neighborhood', 'adaptive', 'tabular', 'oversampling', 'AHOBENN'],
-    problem: '传统 SMOTE 类方法往往依赖固定近邻或线性插值，难以准确反映局部数据密度与少数类真实几何结构。',
-    baseline: 'SMOTE, ADASYN and related oversampling methods',
+    problem: '传统 SMOTE 类方法大多依赖固定近邻、线性插值或预设参数来组织生成区域，这在局部密度变化明显、少数类结构复杂或存在噪声点和离群点时很容易失真。固定邻域可能无法真实反映局部结构，统一生成半径也容易让样本越界；同时很多方法会直接删除噪声点，导致有效边界信息被一并丢掉。',
+    baseline: 'AHOBENN 主要是在 hypersphere oversampling 与 natural-neighborhood 思路上继续推进。它不是简单把样本放进球里生成，而是先用扩展自然邻域替代固定 k 近邻来描述局部结构，再围绕边界点构造自适应超球体，并给不同超球体分配不同采样权重。换句话说，它是在“自然邻域建模 + 超球体生成”两条线上的联合改进。',
     innovationSummary: '提出 AHOBENN：先用扩展自然邻域划分局部区域，再围绕边界少数类点构造自适应超球体，并按权重在球内生成样本。',
     detailedNotes: [
       '先用扩展自然邻域划分局部区域，而不是先固定一个全局 k 值。',

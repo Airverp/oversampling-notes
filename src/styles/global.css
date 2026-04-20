@@ -407,9 +407,8 @@ th {
   border: 1px solid rgba(213, 206, 193, 0.8);
 }
 
-.numbered-card {
-  position: relative;
-  padding-top: 3.2rem;
+.summary-cell-wide {
+  grid-column: 1 / -1;
 }
 
 .number-badge {
