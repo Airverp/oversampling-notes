@@ -508,46 +508,84 @@ export const papers: PaperEntry[] = [
     ],
   },
   {
-    id: 'enh-smote-2025',
+    id: 'enho-2025',
     title: 'A synthetic minority oversampling method with Elastic Net Hypergraph',
     year: 2025,
     authors: 'Pengfei Sun, Zhiping Wang, Peiwen Wang, Kaina Zhao',
     venue: 'Engineering Applications of Artificial Intelligence',
-    keywords: ['hypergraph', 'elastic net', 'noise filtering', 'tabular', 'oversampling'],
-    problem: '传统 SMOTE 及其变体主要依赖点对点近邻关系，难以表达样本间高阶关联；同时在噪声点和离群点附近生成样本会放大错误结构。',
-    baseline: '以 SMOTE 类方法为基线，核心改进是把“样本关系建模”从普通近邻图提升到 Elastic Net 超图，并在生成前做噪声过滤与样本配额分配。',
-    innovationSummary: '提出 ENH-SMOTE：先用改进 Elastic Net 构建超图并过滤噪声，再按超边权重分配生成量，最后在拉普拉斯与高斯约束下生成样本。',
+    keywords: ['hypergraph', 'elastic net', 'noise filtering', 'tabular', 'ENHO'],
+    problem: '传统 SMOTE 及其变体主要依赖点对点近邻关系，无法表达样本间高阶关联；在噪声点和离群点附近生成样本会放大错误结构，加剧类重叠。',
+    baseline: 'ENHO 本质上是在 SMOTE 类插值框架上继续改进，但重点不是再改线性插值公式本身，而是把”样本关系建模”从普通近邻图提升到 Elastic Net 超图，并在生成前做噪声过滤与样本配额分配。可以把它看成是”超图结构建模 + 配额分配 + 拉普拉斯高斯生成”的组合改进。',
+    innovationSummary: '提出 ENHO：先用改进 Elastic Net 构建超图并过滤噪声，再按超边权重分配生成量，最后在拉普拉斯与高斯约束下生成样本。',
     detailedNotes: [
-      '先通过稀疏表示的 Elastic Net 建立超图，保留高阶结构关系。',
+      '先通过稀疏表示的 Elastic Net 建立超图，保留样本间高阶结构关系。',
       '在超图建模阶段先过滤噪声点和离群点，减少后续污染。',
       '根据关联矩阵计算超边权重，再给每个少数类样本分配过采样规模。',
       '样本生成不是纯线性插值，而是结合拉普拉斯结构与高斯分布约束。',
-      '方法重点是“先建结构、再分配、后生成”。',
+      '方法重点是”先建结构、再分配、后生成”，三步缺一不可。',
     ],
-    memorySummary: 'ENH-SMOTE 的主线是：Elastic Net 超图建模并去噪 → 按超边权重分配生成预算 → 在结构约束下生成样本。',
-    memoryAnchors: ['先建超图。', '先过滤噪声。', '按超边权重分配。', '最后在结构约束下生成。'],
+    memorySummary: 'ENHO 的主线是：Elastic Net 超图建模并去噪 → 按超边权重分配生成预算 → 在拉普拉斯高斯约束下生成样本。',
+    memoryAnchors: ['先建超图。', '先过滤噪声。', '按超边权重分配。', '最后拉普拉斯高斯生成。'],
     applicability: '适合样本关系复杂、点对点近邻不足以刻画局部结构的表格不平衡分类任务。',
     limitations: '超图构建与参数估计成本较高；在超高维或样本极少场景下，结构估计稳定性可能下降。',
     citation: 'Sun, P., Wang, Z., Wang, P., & Zhao, K. (2025). A synthetic minority oversampling method with Elastic Net Hypergraph. Engineering Applications of Artificial Intelligence, 142, 109885.',
     links: {},
+    methodSteps: [
+      {
+        title: '步骤 1：Elastic Net 超图建模',
+        action: '用改进的稀疏表示 Elastic Net 为每个少数类样本建立超边，构建超图。',
+        formulaLines: [
+          String.raw`\min_{\mathbf{z}} \|\mathbf{x}_i - \mathbf{X}\mathbf{z}\|_2^2 + \alpha\|\mathbf{z}\|_1 + \beta\|\mathbf{z}\|_2^2`,
+        ],
+        formulaNote: 'z 是稀疏表示系数，α 控制 L1 稀疏性，β 控制 L2 平滑性；非零系数对应的样本构成超边成员。',
+        purpose: '用高阶关系替代点对点近邻，更完整地刻画少数类局部结构。',
+      },
+      {
+        title: '步骤 2：噪声过滤与超边权重计算',
+        action: '根据关联矩阵过滤噪声点和离群点，再计算每条超边的权重。',
+        formulaLines: [
+          String.raw`w(e) = \frac{1}{|e|}\sum_{x_i \in e} \text{sim}(x_i, \bar{x}_e)`,
+        ],
+        formulaNote: 'w(e) 是超边 e 的权重，|e| 是超边内样本数，sim 衡量样本与超边中心的相似度。',
+        purpose: '先清除不可靠样本，再用超边权重反映局部结构的可信度。',
+      },
+      {
+        title: '步骤 3：分配过采样规模',
+        action: '根据超边权重给每个少数类样本分配生成数量。',
+        formulaLines: [
+          String.raw`n_i = \left\lfloor N_{\text{gen}} \cdot \frac{w_i}{\sum_j w_j} \right\rfloor`,
+        ],
+        formulaNote: 'N_gen 是总生成数量，w_i 是样本 i 所在超边的权重；权重越高，分配到的生成次数越多。',
+        purpose: '把生成预算集中到结构更可靠的区域，而不是均匀分配。',
+      },
+      {
+        title: '步骤 4：拉普拉斯高斯生成',
+        action: '利用超图拉普拉斯矩阵和高斯分布生成新样本。',
+        formulaLines: [
+          String.raw`\mathbf{x}_{\text{new}} \sim \mathcal{N}(\mathbf{x}_i,\, \sigma^2 \mathbf{L}^+)`,
+        ],
+        formulaNote: 'L+ 是超图拉普拉斯的伪逆，σ² 控制生成范围；新样本在超图结构约束的局部区域内采样。',
+        purpose: '让新样本贴合超图刻画的高阶局部结构，而不是简单线性插值。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
         moduleName: '样本选择策略',
-        changeSummary: '先过滤噪声与离群样本，再决定哪些少数类样本参与生成。',
+        changeSummary: '先过滤噪声与离群样本，再按超边权重决定哪些样本优先生成。',
         detail: '样本是否被放大由超图结构和质量筛选共同决定，而非对所有少数类一视同仁。',
       },
       {
         key: 'generation-space',
         moduleName: '生成空间约束',
-        changeSummary: '生成空间由超图拉普拉斯与概率分布共同约束。',
+        changeSummary: '生成空间由超图拉普拉斯结构约束。',
         detail: '相比线段插值，它在结构一致性上更强，避免随意越界。',
       },
       {
         key: 'generation-mechanism',
         moduleName: '生成机制',
-        changeSummary: '基于超边权重分配生成数量，并按高斯分布生成新样本。',
-        detail: '生成过程是“先分配再采样”，不是固定次数的均匀插值。',
+        changeSummary: '基于超边权重分配生成数量，并按高斯分布在拉普拉斯约束下生成新样本。',
+        detail: '生成过程是”先分配再采样”，不是固定次数的均匀插值。',
       },
       {
         key: 'quality-control',
@@ -563,18 +601,18 @@ export const papers: PaperEntry[] = [
     year: 2024,
     authors: 'Min Li, Hao Zhou, Qun Liu, Xu Gong, Guoyin Wang',
     venue: 'Expert Systems with Applications',
-    keywords: ['label noise', 'natural neighbor', 'density-aware', 'framework', 'SMOTE variants'],
-    problem: 'SMOTE 类方法常依赖固定 k 近邻并随机选邻居插值，容易忽略分布差异、受噪声干扰并引入额外重叠样本。',
-    baseline: '将其定位为“可叠加在多数 SMOTE 类算法上的加权框架”，而非单一替代算法；核心是先做自然邻域噪声识别，再用相对邻域密度指导生成数量与位置。',
+    keywords: ['label noise', 'natural neighbor', 'density-aware', 'framework', 'WRND'],
+    problem: 'SMOTE 类方法常依赖固定 k 近邻并随机选邻居插值，容易忽略分布差异、受噪声干扰并引入额外重叠样本；超参数 k 的选择也带来额外负担。',
+    baseline: 'WRND 定位为”可叠加在多数 SMOTE 类算法上的加权框架”，而非单一替代算法。它不改变底层插值公式，而是在其上叠加两个约束：先用自然邻域自适应识别噪声，再用相对邻域密度指导生成数量与位置。可以把它看成是”自然邻域去噪 + 密度加权分配”的前处理框架。',
     innovationSummary: '提出 WRND 框架：用自然邻域自适应识别噪声，并以相对邻域密度统一指导样本生成配额与生成位置。',
     detailedNotes: [
       '先用自然邻域区分噪声点和离群点，避免它们参与合成。',
       '定义相对邻域密度，联合刻画类内和类间分布信息。',
-      '不再盲目随机插值，而是按密度信息分配生成预算。',
+      '不再盲目随机插值，而是按密度信息分配生成预算和位置。',
       '框架可与多种 SMOTE 变体结合，强调泛化可用性。',
       '目标是在噪声场景下提升稳健性并减小类重叠。',
     ],
-    memorySummary: 'WRND 是“框架增强型”思路：自然邻域先去噪，再用相对邻域密度决定在哪里、生成多少。',
+    memorySummary: 'WRND 是”框架增强型”思路：自然邻域先去噪，再用相对邻域密度决定在哪里、生成多少。',
     memoryAnchors: ['先自然邻域去噪。', '再算相对邻域密度。', '密度指导数量和位置。', '可叠加到 SMOTE 变体。'],
     applicability: '适合含标签噪声、分布不均且希望在现有 SMOTE 流程上平滑增强的任务。',
     limitations: '框架效果依赖自然邻域与密度估计质量；在极端高维数据上邻域稳定性仍可能受限。',
@@ -582,6 +620,40 @@ export const papers: PaperEntry[] = [
     links: {
       code: 'https://github.com/dream-Im/WRND_framework',
     },
+    methodSteps: [
+      {
+        title: '步骤 1：自然邻域识别与噪声过滤',
+        action: '用自然邻域方法自适应确定每个样本的邻域，并识别噪声点和离群点。',
+        formulaLines: [
+          String.raw`\mathrm{NaN}(x_i) = \{x_j \mid x_i \in \mathrm{kNN}(x_j)\}`,
+        ],
+        formulaNote: 'NaN(x_i) 是 x_i 的自然邻域：x_i 出现在哪些样本的 k 近邻中，那些样本就是它的自然邻居。邻域大小由数据自适应决定，无需手动设置 k。',
+        purpose: '先把噪声点和离群点排除在生成候选之外，避免合成样本继承噪声结构。',
+      },
+      {
+        title: '步骤 2：计算相对邻域密度',
+        action: '在自然邻域内联合计算类内和类间分布信息，得到每个样本的相对邻域密度。',
+        formulaLines: [
+          String.raw`\rho_r(x_i) = \frac{|\mathrm{NaN}(x_i) \cap C_{\min}|}{|\mathrm{NaN}(x_i)|} \cdot \frac{1}{d(x_i, \bar{x}_{\mathrm{NaN}})}`,
+        ],
+        formulaNote: '分子反映邻域内少数类比例，分母反映到邻域中心的距离；密度越高说明该点处于少数类密集且结构清晰的区域。',
+        purpose: '量化每个少数类样本的局部可靠性，为后续生成预算分配提供依据。',
+      },
+      {
+        title: '步骤 3：加权分配生成预算与位置',
+        action: '根据相对邻域密度为每个少数类样本分配生成数量，并指导合成位置。',
+        formulaLines: [
+          String.raw`n_i = \left\lfloor G \cdot \frac{\rho_r(x_i)}{\sum_j \rho_r(x_j)} \right\rfloor`,
+        ],
+        formulaNote: 'G 是总生成数量；密度越高的样本分配到越多的生成次数，生成位置也偏向其自然邻域内部。',
+        purpose: '把生成预算集中到分布可靠的区域，减少在噪声或重叠区域盲目补样。',
+      },
+      {
+        title: '步骤 4：调用底层 SMOTE 变体生成',
+        action: '将加权分配结果传入底层 SMOTE 类算法，按指定数量和位置生成合成样本。',
+        purpose: '框架本身不改变插值公式，而是通过前两步的约束让任意 SMOTE 变体都能更稳健地工作。',
+      },
+    ],
     modules: [
       {
         key: 'distance',
@@ -592,14 +664,14 @@ export const papers: PaperEntry[] = [
       {
         key: 'sample-selection',
         moduleName: '样本选择策略',
-        changeSummary: '先剔除噪声/离群样本，再对有效样本加权分配生成预算。',
+        changeSummary: '先剔除噪声/离群样本，再对有效样本按相对邻域密度加权分配生成预算。',
         detail: '生成预算依据相对邻域密度而非均匀分配。',
       },
       {
         key: 'generation-mechanism',
         moduleName: '生成机制',
         changeSummary: '在原有 SMOTE 生成机制上叠加密度加权控制。',
-        detail: '它强调“框架增强”而非重写底层插值公式。',
+        detail: '它强调”框架增强”而非重写底层插值公式。',
       },
       {
         key: 'quality-control',
@@ -615,41 +687,61 @@ export const papers: PaperEntry[] = [
     year: 2022,
     authors: 'Yuxi Xie, Min Qiu, Haibo Zhang, Lizhi Peng, Zhenxiang Chen',
     venue: 'IEEE Transactions on Knowledge and Data Engineering',
-    keywords: ['gaussian distribution', 'probabilistic anchor', 'density-aware', 'tabular'],
-    problem: '传统重采样方法主要依据局部近邻线性插值，容易生成不必要或错误样本，且对全局分布信息利用不足。',
-    baseline: '相对 SMOTE/ADASYN 等线性插值方法，GDO 保留“先选锚点再生成”的流程，但把锚点选择与样本生成都改为概率分布驱动。',
+    keywords: ['gaussian distribution', 'probabilistic anchor', 'density-aware', 'tabular', 'GDO'],
+    problem: '传统重采样方法主要依据局部近邻线性插值，容易生成不必要或错误样本，且对全局分布信息利用不足，导致生成样本质量参差不齐。',
+    baseline: 'GDO 本质上是在 SMOTE 类”先选起点再生成”的框架上继续改进，但重点不是再改线性插值公式本身，而是把锚点选择从随机近邻改为密度与距离联合的概率机制，并把生成方式从线性插值改为高斯分布采样。可以把它看成是”概率锚点选择 + 高斯生成”的组合改进。',
     innovationSummary: '提出 GDO：通过密度与距离联合的概率机制选择少数类锚点，并按高斯分布生成新样本。',
     detailedNotes: [
-      '锚点不是均匀随机选择，而是根据样本分布特征按概率选取。',
+      '锚点不是均匀随机选择，而是根据密度和距离信息按概率选取。',
       '生成阶段采用高斯分布采样，弱化单一线性插值的刚性。',
       '方法兼顾局部信息与分布信息，减少无效样本生成。',
-      '实验报告在 AUC、G-mean 等指标上优于多种对比方法。',
+      '实验报告在 AUC、G-mean 等指标上优于多种对比方法，且内存占用更低。',
     ],
-    memorySummary: 'GDO 可以记成两步：先概率选锚点，再按高斯分布生成。',
-    memoryAnchors: ['锚点概率选择。', '不是固定线性插值。', '高斯分布生成新样本。'],
+    memorySummary: 'GDO 可以记成两步：先按密度距离概率选锚点，再按高斯分布生成。',
+    memoryAnchors: ['锚点概率选择。', '密度距离联合决定概率。', '高斯分布生成新样本。'],
     applicability: '适合希望降低线性插值局限、又不引入过重模型复杂度的表格不平衡任务。',
-    limitations: '参数设置与分布假设会影响效果；在明显非高斯结构下可能存在拟合偏差。',
+    limitations: '参数设置与高斯分布假设会影响效果；在明显非高斯结构下可能存在拟合偏差。',
     citation: 'Xie, Y., Qiu, M., Zhang, H., Peng, L., & Chen, Z. (2022). Gaussian Distribution Based Oversampling for Imbalanced Data Classification. IEEE Transactions on Knowledge and Data Engineering, 34(2), 667-679. https://doi.org/10.1109/TKDE.2020.2985965',
     links: {
       doi: 'https://doi.org/10.1109/TKDE.2020.2985965',
     },
+    methodSteps: [
+      {
+        title: '步骤 1：概率锚点选择',
+        action: '根据每个少数类样本的密度和距离信息计算被选为锚点的概率。',
+        formulaLines: [
+          String.raw`p_i = \frac{d(x_i, \bar{x}) \cdot \rho(x_i)}{\sum_j d(x_j, \bar{x}) \cdot \rho(x_j)}`,
+        ],
+        formulaNote: 'd(x_i, x̄) 是样本到少数类均值的距离，ρ(x_i) 是局部密度；距离远且密度适中的样本更可能被选为锚点。',
+        purpose: '把生成起点集中到分布边缘但结构可靠的区域，而不是随机选取。',
+      },
+      {
+        title: '步骤 2：高斯分布生成',
+        action: '以选中的锚点为中心，按高斯分布生成新的少数类样本。',
+        formulaLines: [
+          String.raw`x_{\text{new}} \sim \mathcal{N}(x_{\text{anchor}},\, \sigma^2 \mathbf{I})`,
+        ],
+        formulaNote: 'σ² 由局部邻域距离自适应估计；新样本在锚点周围的高斯球内采样，而不是在两点连线上插值。',
+        purpose: '让新样本在锚点附近的合理区域内分布，而不是被限制在线段上。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
         moduleName: '样本选择策略',
         changeSummary: '通过密度与距离信息进行概率锚点选择。',
-        detail: '不同少数类样本被选为生成起点的概率不同。',
+        detail: '不同少数类样本被选为生成起点的概率不同，边缘且密度适中的样本优先。',
       },
       {
         key: 'generation-mechanism',
         moduleName: '生成机制',
-        changeSummary: '由高斯分布采样生成新样本。',
-        detail: '替代纯线性插值，提升生成分布的灵活性。',
+        changeSummary: '由高斯分布采样生成新样本，替代线性插值。',
+        detail: '生成方向不再被限制在两点连线上，提升分布灵活性。',
       },
       {
         key: 'generation-space',
         moduleName: '生成空间约束',
-        changeSummary: '生成空间由概率分布轮廓约束。',
+        changeSummary: '生成空间由锚点周围的高斯概率轮廓约束。',
         detail: '通过分布建模减少明显不合理区域的生成。',
       },
     ],
@@ -661,16 +753,17 @@ export const papers: PaperEntry[] = [
     authors: 'Ashhadul Islam, Samir Brahim Belhaouari, Atiq Ur Rehman, Halima Bensmail',
     venue: 'Applied Soft Computing',
     keywords: ['KNNOR', 'relative density', 'small disjunct', 'noise-resilient', 'tabular'],
-    problem: 'SMOTE/ADASYN 在类内不平衡与 small disjunct 场景下表现不稳，且容易在不安全区域生成样本。',
-    baseline: '在近邻过采样范式上继续改进，不仅考虑最近邻关系，还显式考虑少数类位置、紧致度和与其他类的相对关系。',
+    problem: 'SMOTE/ADASYN 在类内不平衡与 small disjunct 场景下表现不稳，且容易在不安全区域生成样本；它们不考虑少数类相对于整体分布的位置与紧致度。',
+    baseline: 'KNNOR 在近邻过采样范式上继续改进，不仅考虑最近邻关系，还显式考虑少数类位置、紧致度和与其他类的相对关系。它通过三阶段流程先识别关键与安全区域，再结合整体相对密度生成样本，而不是直接近邻插值。',
     innovationSummary: '提出 KNNOR：通过三阶段流程识别关键与安全增强区域，并结合整体相对密度更稳健地生成少数类样本。',
     detailedNotes: [
       '方法强调先识别可安全增强区域，再执行样本生成。',
       '把少数类相对位置与紧致度纳入生成决策，缓解 small disjunct。',
       '生成过程考虑整体相对密度，减少噪声诱导的错误扩增。',
+      '三阶段：识别关键区域 → 识别安全区域 → 按相对密度生成。',
       '实验中在多个数据集上较稳定地优于多种过采样方法。',
     ],
-    memorySummary: 'KNNOR 的关键是先判“哪里安全可补”，再结合相对密度生成，而不是直接近邻插值。',
+    memorySummary: 'KNNOR 的关键是先判”哪里安全可补”，再结合相对密度生成，而不是直接近邻插值。',
     memoryAnchors: ['先划分关键/安全区域。', '考虑位置和紧致度。', '结合相对密度生成。'],
     applicability: '适合存在类内结构不均、簇规模差异明显或含噪的表格不平衡分类问题。',
     limitations: '性能依赖邻域结构估计；在特征空间极稀疏或高维场景下可能需要更谨慎参数设置。',
@@ -678,6 +771,36 @@ export const papers: PaperEntry[] = [
     links: {
       doi: 'https://doi.org/10.1016/j.asoc.2021.108288',
     },
+    methodSteps: [
+      {
+        title: '步骤 1：识别关键区域',
+        action: '计算每个少数类样本与多数类样本的相对位置，识别处于关键（边界）区域的少数类样本。',
+        formulaLines: [
+          String.raw`\text{critical}(x_i) = \frac{|\mathrm{kNN}(x_i) \cap C_{\text{maj}}|}{k} > \theta`,
+        ],
+        formulaNote: '若少数类样本的 k 近邻中多数类比例超过阈值 θ，则判定为关键样本；这些样本处于决策边界附近。',
+        purpose: '先找出最需要被增强的边界少数类样本。',
+      },
+      {
+        title: '步骤 2：识别安全区域',
+        action: '在关键样本中进一步筛选出处于安全区域的样本，排除噪声点。',
+        formulaLines: [
+          String.raw`\text{safe}(x_i) = \text{critical}(x_i) \;\wedge\; \rho_r(x_i) > \delta`,
+        ],
+        formulaNote: 'ρ_r(x_i) 是相对密度，δ 是安全阈值；只有密度足够高的关键样本才被认为是安全可增强的。',
+        purpose: '避免在噪声点或孤立点附近生成样本，提升生成质量。',
+      },
+      {
+        title: '步骤 3：按相对密度生成样本',
+        action: '对安全区域内的少数类样本，按相对密度分配生成数量并插值生成新样本。',
+        formulaLines: [
+          String.raw`x_{\text{new}} = x_i + \lambda (x_j - x_i), \quad \lambda \sim U(0,1)`,
+          String.raw`n_i \propto \rho_r(x_i)`,
+        ],
+        formulaNote: '生成公式与 SMOTE 类似，但生成数量 n_i 由相对密度决定；密度越高的安全样本生成越多。',
+        purpose: '在安全区域内按密度比例补样，兼顾边界增强与噪声鲁棒性。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
@@ -705,17 +828,17 @@ export const papers: PaperEntry[] = [
     year: 2020,
     authors: 'Intouch Kunakorntum, Woranich Hinthong, Phond Phunchongharn',
     venue: 'IEEE Access',
-    keywords: ['probabilistic distribution', 'noise removal', 'z-score', 'tabular'],
-    problem: '多种过采样方法缺少对目标分布的显式建模，容易带来类重叠、噪声生成与过度泛化。',
-    baseline: '以 SMOTE 类方法为比较基线，SyMProD 关键改进是把分布概率引入样本选择，并把归一化和去噪前置到生成前。',
+    keywords: ['probabilistic distribution', 'noise removal', 'z-score', 'tabular', 'SyMProD'],
+    problem: '多种过采样方法缺少对目标分布的显式建模，容易带来类重叠、噪声生成与过度泛化；同时未对数据做标准化预处理，导致生成样本受量纲影响。',
+    baseline: 'SyMProD 本质上是在 SMOTE 类”先选点再插值”的框架上继续改进，但重点不是再改插值公式本身，而是把样本选择从几何近邻改为概率分布驱动，并把归一化和去噪前置到生成前。可以把它看成是”Z-score 标准化 + 去噪 + 概率分布选点 + 近邻插值”的组合改进。',
     innovationSummary: '提出 SyMProD：先做 Z-score 标准化与去噪，再基于两类概率分布选择少数类样本并生成新实例。',
     detailedNotes: [
       '先标准化并清理噪声，减少后续生成被异常值牵引。',
       '样本选择依据多数类和少数类的概率分布，而非仅靠几何近邻。',
       '生成目标是覆盖少数类分布，同时降低重叠与过泛化。',
-      '属于“分布先行”的过采样思路。',
+      '属于”分布先行”的过采样思路，把分布建模前置到选点阶段。',
     ],
-    memorySummary: 'SyMProD 主线：先标准化去噪，再按概率分布选点并生成。',
+    memorySummary: 'SyMProD 主线：先 Z-score 标准化去噪，再按两类概率分布选点，最后近邻插值生成。',
     memoryAnchors: ['先 Z-score。', '先去噪。', '按两类分布选点。', '减少重叠和过泛化。'],
     applicability: '适合对噪声敏感、且希望显式利用类分布信息来指导过采样的任务。',
     limitations: '依赖分布估计与预处理质量；若分布刻画不准，生成优势会减弱。',
@@ -723,23 +846,52 @@ export const papers: PaperEntry[] = [
     links: {
       doi: 'https://doi.org/10.1109/ACCESS.2020.3003346',
     },
+    methodSteps: [
+      {
+        title: '步骤 1：Z-score 标准化与噪声清理',
+        action: '对所有特征做 Z-score 标准化，再移除噪声样本。',
+        formulaLines: [
+          String.raw`z = \frac{x - \mu}{\sigma}`,
+        ],
+        formulaNote: 'μ 和 σ 分别是特征均值和标准差；标准化后再用统计方法识别并移除离群噪声点。',
+        purpose: '消除量纲影响并清除噪声，让后续分布建模更准确。',
+      },
+      {
+        title: '步骤 2：基于概率分布选择少数类样本',
+        action: '根据少数类和多数类的概率分布，为每个少数类样本计算被选为生成起点的概率。',
+        formulaLines: [
+          String.raw`p_i \propto P_{\min}(x_i) \cdot (1 - P_{\text{maj}}(x_i))`,
+        ],
+        formulaNote: 'P_min(x_i) 是 x_i 在少数类分布下的概率，P_maj(x_i) 是在多数类分布下的概率；少数类概率高且多数类概率低的样本优先被选。',
+        purpose: '把生成起点集中到少数类分布核心区域，同时远离多数类重叠区。',
+      },
+      {
+        title: '步骤 3：近邻插值生成',
+        action: '对选中的少数类样本，在其少数类近邻之间插值生成新样本。',
+        formulaLines: [
+          String.raw`x_{\text{new}} = x_i + \lambda (x_j - x_i), \quad \lambda \sim U(0,1)`,
+        ],
+        formulaNote: 'x_j 是 x_i 的少数类近邻，λ 是随机插值系数；生成公式与 SMOTE 类似，但起点由概率分布决定。',
+        purpose: '在分布合理的区域内生成新样本，覆盖少数类分布并减少重叠。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
         moduleName: '样本选择策略',
         changeSummary: '根据两类概率分布选择更合适的少数类生成起点。',
-        detail: '不再只由局部近邻决定哪些点被放大。',
+        detail: '不再只由局部近邻决定哪些点被放大，而是由分布概率驱动。',
       },
       {
         key: 'generation-mechanism',
         moduleName: '生成机制',
-        changeSummary: '在分布约束下与少数类邻居生成新样本。',
+        changeSummary: '在分布约束下与少数类邻居插值生成新样本。',
         detail: '强调覆盖少数类分布而非单纯补数量。',
       },
       {
         key: 'quality-control',
         moduleName: '质量控制',
-        changeSummary: '在生成前执行标准化与噪声清理。',
+        changeSummary: '在生成前执行 Z-score 标准化与噪声清理。',
         detail: '通过前置预处理降低噪声传播与过度泛化。',
       },
     ],
@@ -750,35 +902,65 @@ export const papers: PaperEntry[] = [
     year: 2011,
     authors: 'Enislay Ramentol, Yail Caballero, Rafael Bello, Francisco Herrera',
     venue: 'Knowledge and Information Systems',
-    keywords: ['hybrid sampling', 'rough set theory', 'SMOTE', 'editing'],
-    problem: '在高不平衡数据中，单独过采样容易引入噪声，单独欠采样又可能丢失重要多数类信息。',
-    baseline: '以 SMOTE 为基础，叠加基于粗糙集理论的编辑式欠采样，形成过采样+欠采样联合预处理。',
+    keywords: ['hybrid sampling', 'rough set theory', 'SMOTE', 'editing', 'SMOTE-RSB'],
+    problem: '在高不平衡数据中，单独过采样容易引入噪声样本并加剧边界混乱，单独欠采样又可能丢失重要多数类信息；两者单独使用都难以同时解决高不平衡与边界噪声问题。',
+    baseline: 'SMOTE-RSB 本质上是在 SMOTE 过采样框架上叠加粗糙集编辑步骤，而非单纯改进生成机制。它不改变 SMOTE 的插值公式，而是在生成后用粗糙集下近似对样本集做编辑清理。可以把它看成是”SMOTE 过采样 + 粗糙集编辑欠采样”的混合预处理流程。',
     innovationSummary: '提出 SMOTE-RSB：先用 SMOTE 扩增少数类，再用粗糙集下近似进行编辑清理，实现混合重采样。',
     detailedNotes: [
       '方法定位为混合预处理，不是纯过采样。',
       '先补齐少数类，再通过粗糙集编辑去掉不可靠样本。',
+      '粗糙集下近似保留分类确定性高的样本，去除边界模糊样本。',
       '重点在于降低高不平衡场景下的噪声和边界混乱。',
       '数据层方案与分类器解耦，可复用到不同学习器。',
     ],
-    memorySummary: 'SMOTE-RSB 就是“先 SMOTE 增样，再用粗糙集编辑清理”。',
-    memoryAnchors: ['先过采样。', '再粗糙集编辑。', '混合采样抑制噪声。'],
+    memorySummary: 'SMOTE-RSB 就是”先 SMOTE 增样，再用粗糙集下近似编辑清理”。',
+    memoryAnchors: ['先过采样。', '再粗糙集编辑。', '下近似保留确定性高的样本。', '混合采样抑制噪声。'],
     applicability: '适合高不平衡场景，尤其是希望兼顾少数类补样与边界清理时。',
     limitations: '多阶段流程带来额外计算与参数选择成本；不同数据上编辑强度需平衡。',
     citation: 'Ramentol, E., Caballero, Y., Bello, R., & Herrera, F. (2011). SMOTE-RSB: a hybrid preprocessing approach based on oversampling and undersampling for high imbalanced data-sets using SMOTE and rough sets theory. Knowledge and Information Systems. https://doi.org/10.1007/s10115-011-0465-6',
     links: {
       doi: 'https://doi.org/10.1007/s10115-011-0465-6',
     },
+    methodSteps: [
+      {
+        title: '步骤 1：SMOTE 过采样',
+        action: '用 SMOTE 对少数类样本进行插值过采样，使类别分布趋于平衡。',
+        formulaLines: [
+          String.raw`x_{\text{new}} = x_i + \lambda (x_j - x_i), \quad \lambda \sim U(0,1)`,
+        ],
+        formulaNote: 'x_j 是 x_i 的少数类近邻；生成公式与标准 SMOTE 相同，此步骤不做改动。',
+        purpose: '先补足少数类数量，为后续编辑提供足够的样本基础。',
+      },
+      {
+        title: '步骤 2：粗糙集下近似计算',
+        action: '用粗糙集理论计算训练集的下近似，识别分类确定性高的样本。',
+        formulaLines: [
+          String.raw`\underline{R}(C) = \{x \mid [x]_R \subseteq C\}`,
+        ],
+        formulaNote: '[x]_R 是样本 x 在等价关系 R 下的等价类；若等价类完全包含在类别 C 中，则 x 属于下近似，即分类确定性高。',
+        purpose: '找出分类边界清晰、不含歧义的样本子集。',
+      },
+      {
+        title: '步骤 3：编辑清理',
+        action: '保留下近似中的样本，移除边界模糊或不可靠的样本。',
+        formulaLines: [
+          String.raw`S_{\text{clean}} = \underline{R}(C_{\min}) \cup \underline{R}(C_{\text{maj}})`,
+        ],
+        formulaNote: '对少数类和多数类分别计算下近似，取并集作为清理后的训练集；边界模糊样本被自然排除。',
+        purpose: '减少噪声和边界混乱样本，提升分类器在高不平衡场景下的鲁棒性。',
+      },
+    ],
     modules: [
       {
         key: 'generation-mechanism',
         moduleName: '生成机制',
         changeSummary: '沿用 SMOTE 机制先生成少数类样本。',
-        detail: '生成阶段本身并非主要创新点。',
+        detail: '生成阶段本身并非主要创新点，重点在于后续编辑步骤。',
       },
       {
         key: 'quality-control',
         moduleName: '质量控制',
-        changeSummary: '用粗糙集编辑步骤清理不可靠样本。',
+        changeSummary: '用粗糙集下近似编辑步骤清理不可靠样本。',
         detail: '通过下近似相关思想减少噪声与边界模糊样本。',
       },
       {
@@ -795,9 +977,9 @@ export const papers: PaperEntry[] = [
     year: 2026,
     authors: 'Leifu Gao, Mengyao Zhang, Shijie Zhao',
     venue: 'Expert Systems with Applications',
-    keywords: ['compact coverage sphere', 'natural neighbor', 'geometric integrity', 'overlap control'],
-    problem: '常见 SMOTE 变体在 small disjunct 与类重叠下容易破坏少数类子簇几何完整性，并引入边界噪声。',
-    baseline: '在“几何子空间约束生成”思路上推进：先识别少数类子簇，再构建覆盖球并优化半径约束，不再依赖简单线段插值。',
+    keywords: ['compact coverage sphere', 'natural neighbor', 'geometric integrity', 'overlap control', 'SMOMCCS'],
+    problem: '常见 SMOTE 变体在 small disjunct 与类重叠下容易破坏少数类子簇几何完整性，并引入边界噪声，导致生成样本偏离真实少数类子空间。',
+    baseline: 'SMOMCCS 本质上是在"几何子空间约束生成"思路上推进：先识别少数类子簇，再构建覆盖球并优化半径约束，不再依赖简单线段插值。可以把它看成是"子簇识别 + 覆盖球半径优化 + 角度约束生成"的组合改进。SMOMCCS-NaN 进一步叠加自然邻域去噪。',
     innovationSummary: '提出 SMOMCCS：通过密度驱动子簇识别与最小紧凑覆盖球半径优化，在受角度相似性约束的子空间内生成样本。',
     detailedNotes: [
       '先用自适应核密度识别少数类子簇。',
@@ -812,6 +994,46 @@ export const papers: PaperEntry[] = [
     limitations: '流程较复杂，涉及密度估计与覆盖因子优化；在极高维场景可能增加计算负担。',
     citation: 'Gao, L., Zhang, M., & Zhao, S. (2026). SMOMCCS: Minimum compact coverage oversampling approach for imbalanced data classification. Expert Systems with Applications, 296, 128918.',
     links: {},
+    methodSteps: [
+      {
+        title: '步骤 1：自适应核密度识别少数类子簇',
+        action: '对少数类样本做核密度估计，并按密度峰值划分少数类子簇。',
+        formulaLines: [
+          String.raw`\hat{f}(x)=\frac{1}{nh^d}\sum_{i=1}^{n}K\!\left(\frac{x-x_i}{h}\right)`,
+        ],
+        formulaNote: 'h 是带宽，K 是核函数；通过密度峰和谷识别子簇边界。',
+        purpose: '先恢复少数类的真实子簇结构，避免把不同子簇混在一起生成。',
+      },
+      {
+        title: '步骤 2：构建最小紧凑覆盖球并优化半径',
+        action: '为每个子簇构建紧凑覆盖球，并通过 Coverage Factor 约束优化球半径。',
+        formulaLines: [
+          String.raw`B_k=\{x\mid \|x-c_k\|\le r_k\}`,
+          String.raw`r_k^{*}=\arg\min_{r_k}\;\mathrm{CF}(B_k,r_k)`,
+        ],
+        formulaNote: 'c_k 是子簇中心，r_k 是覆盖球半径；CF 同时平衡覆盖充分性与紧凑性。',
+        purpose: '让生成空间既覆盖子簇有效区域，又避免球体过大导致越界。',
+      },
+      {
+        title: '步骤 3：角度相似性约束生成',
+        action: '在覆盖球内部按角度相似性约束合成新样本。',
+        formulaLines: [
+          String.raw`\cos\theta = \frac{(x_i-c_k)^T(x_j-c_k)}{\|x_i-c_k\|\,\|x_j-c_k\|}`,
+          String.raw`x_{\text{new}} = x_i + \lambda (x_j-x_i),\; \cos\theta \ge \tau`,
+        ],
+        formulaNote: '只有角度相似性达到阈值 τ 的样本对才参与生成，避免方向突变。',
+        purpose: '保持生成方向与子簇几何方向一致，减少结构扭曲。',
+      },
+      {
+        title: '步骤 4：SMOMCCS-NaN 去噪（可选）',
+        action: '在 SMOMCCS 基础上，使用无参数自然邻域过滤噪声样本。',
+        formulaLines: [
+          String.raw`\mathrm{NaN}(x_i)=\{x_j\mid x_i \in \mathrm{kNN}(x_j)\}`,
+        ],
+        formulaNote: '通过邻域标签一致性识别噪声点，NaN 版本无需人工调参。',
+        purpose: '进一步锐化类别边界，减少噪声对生成空间的污染。',
+      },
+    ],
     modules: [
       {
         key: 'sample-selection',
@@ -847,7 +1069,7 @@ export const papers: PaperEntry[] = [
     venue: 'IEEE Transactions on Knowledge and Data Engineering',
     keywords: ['multi-class imbalance', 'Mahalanobis distance', 'MDO', 'covariance-preserving'],
     problem: '多分类不平衡场景中，常规过采样容易忽略类别协方差结构，导致过拟合、过泛化或类间重叠加剧。',
-    baseline: '相对传统 SMOTE 类方法，MDO 从“近邻线段插值”转向“按马氏距离概率等高线生成”，强调保留少数类协方差结构。',
+    baseline: 'MDO 本质上是在 SMOTE 类插值框架上继续改进，但重点不是再改近邻线段插值，而是把生成约束改为马氏距离概率等高线。它通过保持少数类样本到类均值的马氏距离层级来保留协方差结构。可以把它看成是"马氏距离建模 + 协方差保持生成"的改进。',
     innovationSummary: '提出 MDO：生成与目标类均值保持相同马氏距离层级的新样本，以保持少数类协方差结构并降低多类重叠风险。',
     detailedNotes: [
       '核心对象是多分类不平衡，而不仅是二分类。',
@@ -861,6 +1083,36 @@ export const papers: PaperEntry[] = [
     limitations: '依赖协方差估计稳定性；当类别样本很少或分布非椭球时效果可能受限。',
     citation: 'Abdi, L., & Hashemi, S. (2016). To Combat Multi-Class Imbalanced Problems by Means of Over-Sampling Techniques. IEEE Transactions on Knowledge and Data Engineering, 28(1), 238-251.',
     links: {},
+    methodSteps: [
+      {
+        title: '步骤 1：估计少数类均值与协方差',
+        action: '对目标少数类估计均值向量和协方差矩阵。',
+        formulaLines: [
+          String.raw`\mu_c = \frac{1}{n_c}\sum_{i=1}^{n_c} x_i`,
+          String.raw`\Sigma_c = \frac{1}{n_c-1}\sum_{i=1}^{n_c}(x_i-\mu_c)(x_i-\mu_c)^T`,
+        ],
+        formulaNote: 'μ_c 和 Σ_c 分别描述该少数类的中心与形状。',
+        purpose: '为马氏距离建模和等高线生成提供统计基础。',
+      },
+      {
+        title: '步骤 2：计算样本马氏距离层级',
+        action: '计算每个少数类样本到类均值的马氏距离，形成距离层级。',
+        formulaLines: [
+          String.raw`d_M(x_i,\mu_c)=\sqrt{(x_i-\mu_c)^T\Sigma_c^{-1}(x_i-\mu_c)}`,
+        ],
+        formulaNote: '马氏距离显式考虑协方差，可反映椭球分布结构而非球形欧氏结构。',
+        purpose: '确定生成样本应落在哪个概率等高线层级上。',
+      },
+      {
+        title: '步骤 3：在等高线上采样生成',
+        action: '生成与现有少数类样本保持相同马氏距离层级的新样本。',
+        formulaLines: [
+          String.raw`\{x_{\text{new}}\mid (x_{\text{new}}-\mu_c)^T\Sigma_c^{-1}(x_{\text{new}}-\mu_c)=d_M(x_i,\mu_c)^2\}`,
+        ],
+        formulaNote: '新样本被约束在与原样本同层的马氏距离等值面上，从而保持类别协方差结构。',
+        purpose: '在补样的同时维持类内形状一致性，减少多类重叠风险。',
+      },
+    ],
     modules: [
       {
         key: 'distance',
